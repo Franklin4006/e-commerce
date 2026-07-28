@@ -15,23 +15,23 @@ class SettingSeeder extends Seeder
      */
     public function run(): void
     {
-        $logo = $this->placeholderImage('settings', 'LOGO', '#4f46e5', 320, 100);
+        $logo = $this->placeholderImage('settings', 'LOGO', '#be185d', 320, 100);
 
         $values = [
-            'site_name' => 'Sample E-Commerse',
+            'site_name' => 'Jana Boutique',
             'logo' => $logo,
-            'meta_title' => 'Sample E-Commerse - Everyday Essentials Online',
-            'meta_description' => 'Shop electronics, fashion, home essentials and more at Sample E-Commerse. Fast delivery, secure payments, easy returns.',
-            'meta_keywords' => 'online shopping, ecommerce, electronics, fashion, home essentials',
-            'primary_color' => '#4f46e5',
-            'secondary_color' => '#0f172a',
-            'email' => 'support@sampleecommerse.test',
+            'meta_title' => 'Jana Boutique - Women\'s Exclusive Fashion Online',
+            'meta_description' => 'Shop Kurthis, Tops, Leggings and Western Wear at Jana Boutique. Sizes M to XXL, fast delivery, secure payments, easy returns.',
+            'meta_keywords' => 'jana boutique, womens fashion, kurthis, tops, leggings, western wear',
+            'primary_color' => '#be185d',
+            'secondary_color' => '#f6a623',
+            'email' => 'support@janaboutique.test',
             'phone' => '+91 98765 43210',
             'address' => '42, Anna Salai, T. Nagar, Chennai, Tamil Nadu 600017, India',
-            'social_facebook' => 'https://facebook.com/sampleecommerse',
-            'social_instagram' => 'https://instagram.com/sampleecommerse',
-            'social_twitter' => 'https://x.com/sampleecommerse',
-            'social_youtube' => 'https://youtube.com/@sampleecommerse',
+            'social_facebook' => 'https://facebook.com/janaboutique',
+            'social_instagram' => 'https://instagram.com/janaboutique',
+            'social_twitter' => 'https://x.com/janaboutique',
+            'social_youtube' => 'https://youtube.com/@janaboutique',
         ];
 
         foreach ($values as $key => $value) {

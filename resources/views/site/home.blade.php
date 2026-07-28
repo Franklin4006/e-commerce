@@ -36,45 +36,62 @@
     @endif
 
     <section class="trust-bar">
-        <div class="trust-item">
+        <div class="trust-item" data-aos="fade-up">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
             <div>
-                <p class="trust-item-title">Fast Delivery</p>
+                <p class="trust-item-title">Pan-India Delivery</p>
                 <p class="trust-item-text">Quick order dispatch</p>
             </div>
         </div>
-        <div class="trust-item">
+        <div class="trust-item" data-aos="fade-up" data-aos-delay="70">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><path d="M12 3v9l4 2"/></svg>
             <div>
-                <p class="trust-item-title">Easy Returns</p>
-                <p class="trust-item-text">Hassle-free exchange</p>
+                <p class="trust-item-title">7-Day Easy Exchange</p>
+                <p class="trust-item-text">Wrong size? Swap it hassle-free</p>
             </div>
         </div>
-        <div class="trust-item">
+        <div class="trust-item" data-aos="fade-up" data-aos-delay="140">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <div>
                 <p class="trust-item-title">Secure Payment</p>
                 <p class="trust-item-text">100% protected checkout</p>
             </div>
         </div>
-        <div class="trust-item">
+        <div class="trust-item" data-aos="fade-up" data-aos-delay="210">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <div>
-                <p class="trust-item-title">Dedicated Support</p>
-                <p class="trust-item-text">We're here to help</p>
+                <p class="trust-item-title">Styling Support</p>
+                <p class="trust-item-text">We're here to help you shop</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="size-promo" data-aos="fade-up">
+        <div class="size-promo-inner">
+            <div class="size-promo-text">
+                <span class="size-promo-eyebrow">Made For Every Body</span>
+                <h2 class="size-promo-title">One size doesn't fit all &mdash; shop <span>M to XXL</span></h2>
+                <p class="size-promo-desc">Every Kurthi, Top, Legging and Western Wear piece comes in a full size range, so you always find your perfect fit.</p>
+                <a href="{{ route('shop.index') }}" class="btn btn-primary btn-pill">Shop the Collection</a>
+            </div>
+            <div class="size-promo-badges">
+                <span class="size-promo-badge">M</span>
+                <span class="size-promo-badge">L</span>
+                <span class="size-promo-badge">XL</span>
+                <span class="size-promo-badge">XXL</span>
             </div>
         </div>
     </section>
 
     @if ($deals->isNotEmpty())
         <section class="home-panel">
-            <div class="home-panel-header">
+            <div class="home-panel-header" data-aos="fade-up">
                 <h2 class="home-panel-title">Today's Deals</h2>
                 <a href="{{ route('shop.index', ['sort' => 'discount']) }}" class="home-panel-link">See all deals</a>
             </div>
-            <div class="deal-strip">
+            <div class="product-grid">
                 @foreach ($deals as $product)
-                    @include('site.partials._deal-card')
+                    @include('site.partials._product-card', ['aosDelay' => $loop->index % 4 * 70])
                 @endforeach
             </div>
         </section>
@@ -82,12 +99,12 @@
 
     @if ($categories->isNotEmpty())
         <section class="home-panel">
-            <div class="home-panel-header">
+            <div class="home-panel-header" data-aos="fade-up">
                 <h2 class="home-panel-title">Shop by Category</h2>
             </div>
             <div class="category-grid">
                 @foreach ($categories as $category)
-                    <a href="{{ route('category.show', $category) }}" class="category-tile">
+                    <a href="{{ route('category.show', $category) }}" class="category-tile" data-aos="zoom-in" data-aos-delay="{{ $loop->index * 70 }}">
                         @if ($category->image)
                             <img src="{{ asset('storage/'.$category->image) }}" alt="{{ $category->name }}">
                         @endif
@@ -100,14 +117,28 @@
         </section>
     @endif
 
+    @if ($newArrivals->isNotEmpty())
+        <section class="home-panel">
+            <div class="home-panel-header" data-aos="fade-up">
+                <h2 class="home-panel-title">New Arrivals</h2>
+                <a href="{{ route('shop.index', ['sort' => 'newest']) }}" class="home-panel-link">View all</a>
+            </div>
+            <div class="product-grid">
+                @foreach ($newArrivals as $product)
+                    @include('site.partials._product-card', ['aosDelay' => $loop->index % 4 * 70])
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <section class="home-panel">
-        <div class="home-panel-header">
+        <div class="home-panel-header" data-aos="fade-up">
             <h2 class="home-panel-title">Featured Products</h2>
             <a href="{{ route('shop.index') }}" class="home-panel-link">View all</a>
         </div>
         <div class="product-grid">
             @forelse ($products as $product)
-                @include('site.partials._product-card')
+                @include('site.partials._product-card', ['aosDelay' => $loop->index % 4 * 70])
             @empty
                 <p>No products available yet.</p>
             @endforelse

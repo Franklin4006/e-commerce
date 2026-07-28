@@ -42,12 +42,174 @@
         @error('sale_price') <span class="field-error">{{ $message }}</span> @enderror
         <small style="color: var(--text-muted);">Must not exceed MRP.</small>
     </div>
+</div>
 
-    <div class="form-group">
-        <label for="stock" class="form-label">Stock</label>
-        <input id="stock" type="number" name="stock" value="{{ old('stock', $product->stock ?? 0) }}" min="0" required class="form-control">
-        @error('stock') <span class="field-error">{{ $message }}</span> @enderror
+@php
+    $sizeNames = \App\Models\Size::names();
+    $colorlessSizes = isset($product) ? $product->sizes->where('product_color_id', null) : collect();
+@endphp
+<div class="form-group">
+    <label class="form-label">
+        Stock by Size
+        <a href="{{ route('admin.sizes.index') }}" target="_blank" style="font-weight: 400; font-size: 0.8rem;">Manage sizes</a>
+    </label>
+    <small style="display: block; color: var(--text-muted); margin-bottom: 0.5rem;">
+        Used only if this product has no colors below. Once you add colors, stock is tracked per color instead.
+    </small>
+    <div class="form-row">
+        @foreach ($sizeNames as $sizeOption)
+            <div class="form-group">
+                <label for="sizes_{{ $sizeOption }}" class="form-label">{{ $sizeOption }}</label>
+                <input id="sizes_{{ $sizeOption }}" type="number" name="sizes[{{ $sizeOption }}]"
+                    value="{{ old('sizes.'.$sizeOption, $colorlessSizes->firstWhere('size', $sizeOption)->stock ?? 0) }}"
+                    min="0" required class="form-control">
+                @error('sizes.'.$sizeOption) <span class="field-error">{{ $message }}</span> @enderror
+            </div>
+        @endforeach
     </div>
+</div>
+
+@php
+    $paletteColors = \App\Models\Color::ordered()->get();
+
+    if (old('colors')) {
+        $colorRows = collect(old('colors'))->values();
+    } else {
+        $colorRows = isset($product)
+            ? $product->colors->map(fn ($color) => [
+                'id' => $color->id,
+                'color_id' => $color->color_id,
+                'images' => $color->images->map(fn ($img) => ['id' => $img->id, 'path' => $img->image]),
+                'sizes' => collect($sizeNames)->mapWithKeys(
+                    fn ($s) => [$s => $color->sizes->firstWhere('size', $s)->stock ?? 0]
+                ),
+            ])
+            : collect();
+    }
+@endphp
+
+<div class="form-group">
+    <label class="form-label">
+        Colors (optional)
+        <a href="{{ route('admin.colors.index') }}" target="_blank" style="font-weight: 400; font-size: 0.8rem;">Manage colors</a>
+    </label>
+    <small style="display: block; color: var(--text-muted); margin-bottom: 0.5rem;">
+        Pick a color from the palette to give it its own photo gallery and its own stock by size. Leave empty for a single-color product.
+    </small>
+
+    <div id="color-rows">
+        @foreach ($colorRows as $i => $color)
+            <div class="color-row" data-color-row>
+                <input type="hidden" name="colors[{{ $i }}][id]" value="{{ $color['id'] ?? '' }}">
+                <div class="color-row-main">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Color</label>
+                            <select name="colors[{{ $i }}][color_id]" class="form-control color-row-select">
+                                <option value="">Select a color</option>
+                                @foreach ($paletteColors as $paletteColor)
+                                    <option value="{{ $paletteColor->id }}" data-hex="{{ $paletteColor->hex }}" @selected((string) ($color['color_id'] ?? '') === (string) $paletteColor->id)>{{ $paletteColor->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group" style="max-width: 60px;">
+                            <label class="form-label">&nbsp;</label>
+                            <span class="color-row-swatch-preview"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Photos</label>
+                        <label class="file-drop">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                            <span class="file-drop-text">Click to upload photos</span>
+                            <span class="file-drop-hint">You can select multiple images</span>
+                            <input type="file" name="colors[{{ $i }}][images][]" accept="image/*" multiple class="file-drop-input color-images-input">
+                        </label>
+                        <div class="gallery-grid color-existing-images">
+                            @foreach ($color['images'] ?? [] as $img)
+                                <div class="gallery-item">
+                                    <img src="{{ asset('storage/'.$img['path']) }}" alt="">
+                                    <button type="button" class="gallery-item-remove"
+                                            data-url="{{ route('admin.products.color-images.destroy', [$product, $img['id']]) }}">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="gallery-grid color-new-images-preview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Stock by Size</label>
+                        <div class="form-row">
+                            @foreach ($sizeNames as $sizeOption)
+                                <div class="form-group">
+                                    <label class="form-label">{{ $sizeOption }}</label>
+                                    <input type="number" name="colors[{{ $i }}][sizes][{{ $sizeOption }}]" value="{{ $color['sizes'][$sizeOption] ?? 0 }}" min="0" class="form-control">
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-icon danger color-row-remove" data-action="remove-color-row" title="Remove color">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+                </button>
+            </div>
+        @endforeach
+    </div>
+
+    <button type="button" class="btn btn-secondary" id="add-color-row">+ Add Color</button>
+
+    <template id="color-row-template">
+        <div class="color-row" data-color-row>
+            <input type="hidden" name="colors[__INDEX__][id]" value="">
+            <div class="color-row-main">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Color</label>
+                        <select name="colors[__INDEX__][color_id]" class="form-control color-row-select">
+                            <option value="">Select a color</option>
+                            @foreach ($paletteColors as $paletteColor)
+                                <option value="{{ $paletteColor->id }}" data-hex="{{ $paletteColor->hex }}">{{ $paletteColor->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" style="max-width: 60px;">
+                        <label class="form-label">&nbsp;</label>
+                        <span class="color-row-swatch-preview"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Photos</label>
+                    <label class="file-drop">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                        <span class="file-drop-text">Click to upload photos</span>
+                        <span class="file-drop-hint">You can select multiple images</span>
+                        <input type="file" name="colors[__INDEX__][images][]" accept="image/*" multiple class="file-drop-input color-images-input">
+                    </label>
+                    <div class="gallery-grid color-existing-images"></div>
+                    <div class="gallery-grid color-new-images-preview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Stock by Size</label>
+                    <div class="form-row">
+                        @foreach ($sizeNames as $sizeOption)
+                            <div class="form-group">
+                                <label class="form-label">{{ $sizeOption }}</label>
+                                <input type="number" name="colors[__INDEX__][sizes][{{ $sizeOption }}]" value="0" min="0" class="form-control">
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-icon danger color-row-remove" data-action="remove-color-row" title="Remove color">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </template>
 </div>
 
 <div class="form-group">
@@ -70,34 +232,6 @@
     @error('thumbnail') <span class="field-error">{{ $message }}</span> @enderror
     <img id="thumbnail-preview" src="{{ isset($product) && $product->thumbnail ? asset('storage/'.$product->thumbnail) : '' }}"
          alt="" class="thumb-lg form-preview" style="{{ isset($product) && $product->thumbnail ? '' : 'display: none;' }}">
-</div>
-
-<div class="form-group">
-    <label class="form-label">Product Images</label>
-    <label for="images" class="file-drop" id="images-drop">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
-        <span class="file-drop-text" id="images-drop-text">Click to upload product images</span>
-        <span class="file-drop-hint">You can select multiple images</span>
-    </label>
-    <input id="images" type="file" name="images[]" accept="image/*" multiple class="file-drop-input">
-    @error('images') <span class="field-error">{{ $message }}</span> @enderror
-    <div class="gallery-grid" id="new-images-preview"></div>
-
-    @if (isset($product) && $product->images->isNotEmpty())
-        <div class="gallery-grid" id="existing-images">
-            @foreach ($product->images as $image)
-                <div class="gallery-item">
-                    <img src="{{ asset('storage/'.$image->image) }}" alt="">
-                    <button type="button" class="gallery-item-remove"
-                            data-image-id="{{ $image->id }}"
-                            data-product-id="{{ $product->id }}"
-                            data-url="{{ route('admin.products.images.destroy', [$product, $image]) }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
-                    </button>
-                </div>
-            @endforeach
-        </div>
-    @endif
 </div>
 
 <div class="form-group">

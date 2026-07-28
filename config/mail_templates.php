@@ -72,7 +72,7 @@ return [
     'contact-inquiry' => [
         'name' => 'Contact Inquiry Notification',
         'subject' => 'New contact inquiry from {{ name }}',
-        'description' => 'Sent to the store\'s contact email when a customer submits the Contact Us form. Available variables: {{ name }}, {{ email }}, {{ subject }}, {{ message }}. Also available everywhere: {{ site_name }}, {{ primary_color }}.',
+        'description' => 'Sent to the store\'s contact email when a customer submits the Contact Us form. Available variables: {{ name }}, {{ email }}, {{ phone }}, {{ subject }}, {{ message }}. Also available everywhere: {{ site_name }}, {{ primary_color }}.',
         'body' => <<<'HTML'
             <h2 style="margin:0 0 16px; font-size:20px; color:#101828;">New contact inquiry</h2>
             <p style="margin:0 0 24px;">You've received a new message via the {{ site_name }} Contact Us form.</p>
@@ -84,6 +84,10 @@ return [
                 <tr>
                     <td style="padding:0 20px 16px; font-size:14px; color:#344054; border-top:1px solid #eef0f3;">Email</td>
                     <td style="padding:0 20px 16px; font-size:14px; color:#101828; font-weight:600; border-top:1px solid #eef0f3;">{{ email }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:0 20px 16px; font-size:14px; color:#344054; border-top:1px solid #eef0f3;">Phone</td>
+                    <td style="padding:0 20px 16px; font-size:14px; color:#101828; font-weight:600; border-top:1px solid #eef0f3;">{{ phone }}</td>
                 </tr>
                 <tr>
                     <td style="padding:0 20px 16px; font-size:14px; color:#344054; border-top:1px solid #eef0f3;">Subject</td>

@@ -1,151 +1,88 @@
 /* ==========================================================================
-   CozaStore-inspired storefront theme
+   Sarab-inspired storefront theme
    Loaded AFTER app.css, on storefront pages only (components/layouts/site
    .blade.php). Every rule here only overrides *cosmetic* properties (color,
    font, radius, shadow, spacing, border) on the existing class contract —
    no selector is renamed and no layout (display/grid/flex/width) is
    touched, so every data-action/id hook that public/js/*.js depends on
-   keeps working untouched. Fonts/icons are referenced directly from the
-   already-public cozastore-1.0.0 template folder, no assets duplicated.
+   keeps working untouched. Font (Onest) is loaded via the Google Fonts
+   <link> in site.blade.php.
    ========================================================================== */
 
-/* ----- Fonts (self-hosted, pulled from the uploaded CozaStore template) ----- */
-@font-face {
-    font-family: 'Poppins';
-    src: url('../cozastore-1.0.0/fonts/Poppins/Poppins-Light.ttf');
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Poppins';
-    src: url('../cozastore-1.0.0/fonts/Poppins/Poppins-Regular.ttf');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Poppins';
-    src: url('../cozastore-1.0.0/fonts/Poppins/Poppins-Medium.ttf');
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Poppins';
-    src: url('../cozastore-1.0.0/fonts/Poppins/Poppins-SemiBold.ttf');
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Poppins';
-    src: url('../cozastore-1.0.0/fonts/Poppins/Poppins-Bold.ttf');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Poppins';
-    src: url('../cozastore-1.0.0/fonts/Poppins/Poppins-Bold.ttf');
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Playfair Display';
-    src: url('../cozastore-1.0.0/fonts/PlayfairDisplay/PlayfairDisplay-Regular.ttf');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Playfair Display';
-    src: url('../cozastore-1.0.0/fonts/PlayfairDisplay/PlayfairDisplay-Bold.ttf');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Montserrat';
-    src: url('../cozastore-1.0.0/fonts/Montserrat/Montserrat-Regular.ttf');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'Montserrat';
-    src: url('../cozastore-1.0.0/fonts/Montserrat/Montserrat-Bold.ttf');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
 :root {
-    --font-display: 'Playfair Display', Georgia, serif;
-    --font-eyebrow: 'Montserrat', -apple-system, sans-serif;
-    /* CozaStore accent palette */
-    --color-primary: #717fe0;
-    --color-primary-dark: #4d5bc4;
-    --color-primary-soft: rgba(113, 127, 224, 0.12);
-    --star: #f9ba48;
-    --accent: #f9ba48;
-    --sale-badge: #f74877;
-    --border-color: #e6e6e6;
+    --font-display: 'Onest', sans-serif;
+    --font-eyebrow: 'Onest', sans-serif;
+    /* Sarab accent palette — --site-primary/--site-secondary stay wired to the
+       admin-configurable site settings; these are only the fallback defaults. */
+    --color-primary: var(--site-primary, #be185d);
+    --color-primary-dark: #8a0f45;
+    --color-primary-soft: rgba(190, 24, 93, 0.12);
+    --color-secondary: var(--site-secondary, #f6a623);
+    --color-dark: #1a1a1a;
+    --color-green: #2d6a4f;
+    --cream: #fff8f0;
+    --cream2: #fef0dc;
+    --light: #f9f5f0;
+    --star: #f6a623;
+    --accent: var(--color-secondary);
+    --sale-badge: #d1264c;
+    --border-color: #efe3d8;
     --text-muted: #888;
-    --radius: 3px;
-    --radius-lg: 6px;
-    --radius-pill: 25px;
-    --shadow-sm: 0 1px 5px 0 rgba(0, 0, 0, 0.15);
-    --shadow-md: 0 3px 10px 0 rgba(0, 0, 0, 0.15);
-    --shadow-lg: 0 3px 20px 0 rgba(0, 0, 0, 0.2);
-    /* Every header icon (menu, search, account, wishlist, cart) shares this
-       size so the row reads as one consistent set, desktop and mobile alike. */
-    --header-icon-size: 24px;
+    --radius: 12px;
+    --radius-lg: 18px;
+    --radius-pill: 50px;
+    --shadow-sm: 0 4px 18px rgba(26, 15, 10, 0.07);
+    --shadow-md: 0 12px 32px rgba(26, 15, 10, 0.12);
+    --shadow-lg: 0 20px 48px rgba(26, 15, 10, 0.18);
 }
 
 body {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #333;
-    background: #fff;
+    font-family: 'Onest', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #444;
+    background: var(--light);
 }
 
-/* ----- Buttons: pill shape + fill/hover-swap like the template's utility-chain buttons ----- */
+/* ----- Buttons: gradient pill CTAs with a lift-on-hover, like sarab's .btn-red ----- */
 .btn {
     border-radius: var(--radius-pill);
-    font-family: 'Poppins', sans-serif;
-    font-weight: 500;
+    font-family: 'Onest', sans-serif;
+    font-weight: 600;
     letter-spacing: 0.01em;
-    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .btn-primary {
-    background: var(--color-primary);
-    box-shadow: var(--shadow-sm);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border: none;
+    box-shadow: 0 8px 24px var(--color-primary-soft);
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #222;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    transform: translateY(-3px);
+    box-shadow: 0 14px 34px var(--color-primary-soft);
 }
 
 .btn-outline {
-    border: 1px solid var(--border-color);
+    border: 1.5px solid var(--border-color);
     background: #fff;
-    color: #333;
+    color: var(--color-dark);
 }
 
 .btn-outline:hover:not(:disabled) {
     border-color: var(--color-primary);
     color: var(--color-primary);
     background: #fff;
+    transform: translateY(-2px);
 }
 
 .btn-buy-now {
-    background: #222;
+    background: var(--color-dark);
 }
 
 .btn-buy-now:hover:not(:disabled) {
-    background: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    transform: translateY(-3px);
 }
 
 .btn-google {
@@ -160,7 +97,7 @@ body {
 .form-control {
     border-radius: var(--radius);
     border-color: var(--border-color);
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Onest', sans-serif;
 }
 
 .form-control:focus {
@@ -171,157 +108,184 @@ body {
 .card {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
+    border-color: var(--border-color);
 }
 
 .badge {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Onest', sans-serif;
 }
 
-.section-title,
-.page-title {
+.section-title {
     font-family: var(--font-display);
     font-weight: 700;
+    color: var(--color-dark);
 }
 
-/* ===================== Header / topbar / nav ===================== */
+.page-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    color: var(--color-dark);
+    position: relative;
+    padding-bottom: 16px;
+}
+
+.page-title::after {
+    content: "";
+    display: block;
+    width: 58px;
+    height: 4px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    margin-top: 12px;
+}
+
+/* Centered sarab-style section intro: eyebrow label, then .page-title with
+   its underline re-centered via this modifier, then an optional description. */
+.section-eyebrow {
+    display: inline-block;
+    font-family: 'Onest', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+}
+
+.page-title-center {
+    text-align: center;
+}
+
+.page-title-center::after {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.section-header-desc {
+    max-width: 560px;
+    margin: 0.75rem auto 0;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+
+/* ===================== Header / topbar / nav (sarab-style, single row) ===================== */
 .site-topbar {
-    background: #222;
-    font-family: 'Poppins', sans-serif;
+    background: var(--color-dark);
+    font-family: 'Onest', sans-serif;
+}
+
+.site-topbar svg {
+    color: var(--color-secondary);
+}
+
+.site-topbar-tag {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: #fff;
+}
+
+.site-topbar-social a {
+    transition: background-color 0.2s ease;
+}
+
+.site-topbar-social a:hover {
+    background: var(--color-primary);
 }
 
 .site-header {
     background: #fff;
-    color: #222;
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: none;
+    color: var(--color-dark);
+    border-bottom: none;
+    box-shadow: 0 2px 20px rgba(26, 15, 10, 0.07);
 }
 
-.site-header-primary-inner {
-    padding: 1.35rem 1rem;
-    gap: 1rem;
-    align-items: center;
+.site-navbar-inner {
+    padding: 1rem 1rem;
 }
 
 .site-logo {
-    max-height: 60px;
+    max-height: 56px;
 }
 
 .mobile-menu-toggle,
 .site-brand,
-.site-header-action,
-.header-account .action-top,
-.header-account .action-main,
-.account-icon,
-.site-header-cart,
-.site-header-wishlist {
-    color: #222;
+.nav-icon-btn {
+    color: var(--color-dark);
 }
 
-.site-brand,
-.site-header-action:hover,
-.site-header-cart:hover,
-.user-menu:hover .user-menu-trigger {
-    border-color: transparent;
+.site-brand:hover {
+    color: var(--color-primary);
 }
 
 .site-brand {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.6rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    font-weight: 900;
+    font-size: 1.7rem;
+    letter-spacing: 0.01em;
+    gap: 0.6rem;
 }
 
-.site-header-action .action-top {
-    color: rgba(34, 34, 34, 0.65);
-}
-
-.site-search {
-    border-radius: var(--radius-pill);
-    background: #f2f2f2;
-    height: 50px;
-}
-
-.site-header-action,
-.user-menu-trigger.header-account {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-}
-
-.site-header-cart,
-.site-header-wishlist {
-    /* No vertical padding here — the badge is positioned absolutely off this
-       element's padding edge, so adding padding would push the icon down
-       without moving the badge, leaving a gap between them. Height/centering
-       comes from .site-header-primary-inner + align-items below instead. */
+/* Sarab-style icon badge next to the wordmark (only rendered when there's
+   no uploaded logo image — see components/layouts/site.blade.php). */
+.site-brand-icon {
+    display: flex;
     align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: #fff;
+    box-shadow: 0 4px 15px var(--color-primary-soft);
+    flex-shrink: 0;
 }
 
-.site-header-actions {
-    align-items: center;
+.site-brand-icon svg {
+    width: 22px;
+    height: 22px;
 }
 
-/* Unify every header icon (menu toggle, search, account, wishlist, cart) to
-   the same square size and centered alignment, desktop and mobile alike. */
-.mobile-menu-toggle svg,
-.site-search-btn svg,
-.site-header-cart svg,
-.site-header-wishlist svg,
-.account-icon {
-    width: var(--header-icon-size);
-    height: var(--header-icon-size);
-}
-
-/* Re-anchor the count badges to the smaller, unified icon size (the app.css
-   defaults were tuned for a larger cart glyph). */
-.site-icon-count {
-    top: -4px;
-    right: -4px;
-}
-
-.site-header-cart .site-icon-count {
-    top: -4px;
-    left: 13px;
-    right: auto;
-}
-
-.site-search-input {
-    color: #333;
-}
-
-.site-search-btn {
-    background: transparent;
-    color: #222;
-    width: 46px;
-}
-
-.site-search-btn:hover {
-    color: var(--color-primary);
-    filter: none;
-}
-
-.site-header-secondary {
-    background: #222;
-}
-
-.site-header-secondary-inner {
-    padding: 0 0.5rem;
+/* Center the primary nav links like sarab's navbar-nav.mx-auto (desktop only
+   — the 640px-and-below breakpoint in app.css switches .site-nav to a
+   column-flex dropdown, where centering has no visible effect anyway). */
+.site-nav {
+    justify-content: center;
 }
 
 .site-nav a {
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.85rem;
+    font-family: 'Onest', sans-serif;
+    font-size: 0.87rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: rgba(255, 255, 255, 0.85);
-    padding-top: 1.6rem;
-    padding-bottom: 1.6rem;
+    color: var(--color-dark);
+    position: relative;
+}
+
+.site-nav a::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background: var(--color-primary);
+    border-radius: 3px 3px 0 0;
+    transition: width 0.3s ease;
 }
 
 .site-nav a:hover,
 .site-nav a.active {
-    border-color: transparent;
+    color: var(--color-primary);
+}
+
+.site-nav a:hover::after,
+.site-nav a.active::after {
+    width: 55%;
+}
+
+/* Right-side icon buttons: search toggle, wishlist, cart, account */
+.nav-icon-btn:hover {
+    background: var(--light);
     color: var(--color-primary);
 }
 
@@ -330,79 +294,141 @@ body {
     color: #fff;
 }
 
+.nav-search-panel {
+    background: var(--light);
+}
+
+.nav-search-form {
+    background: #fff;
+    border-radius: var(--radius-pill);
+}
+
+.nav-search-form input {
+    color: var(--color-dark);
+}
+
+.nav-search-form button {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: #fff;
+    transition: filter 0.2s ease, transform 0.15s ease;
+}
+
+.nav-search-form button:hover {
+    filter: brightness(1.08);
+}
+
+.nav-search-form button:active {
+    transform: scale(0.93);
+}
+
 /* ===================== Footer ===================== */
 .site-footer {
-    background: #222;
-    color: rgba(255, 255, 255, 0.65);
+    background: var(--color-dark);
+    color: rgba(255, 255, 255, 0.6);
     border-top: none;
 }
 
 .site-footer-brand-name {
     font-family: var(--font-display);
-    font-size: 1.4rem;
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: #fff;
 }
 
 .site-footer-heading {
-    font-family: var(--font-eyebrow);
+    font-family: 'Onest', sans-serif;
     font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    color: #fff;
+    display: inline-block;
+    padding-bottom: 9px;
+    border-bottom: 2px solid var(--color-primary);
 }
 
 .site-footer-link:hover {
-    color: var(--color-primary);
+    color: var(--color-secondary);
 }
 
 .site-footer-social a {
-    border-radius: 50%;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .site-footer-social a:hover {
     background: var(--color-primary);
+    transform: translateY(-3px);
 }
 
 /* ===================== Home: hero, trust bar, category, products ===================== */
 .hero-slider {
     border-radius: 0;
+    background: var(--cream);
 }
 
 .hero-slide-title {
     font-family: var(--font-display);
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-weight: 900;
+    letter-spacing: 0.01em;
 }
 
 .hero-slide-subtitle {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Onest', sans-serif;
 }
 
 .hero-slide-btn {
     border-radius: var(--radius-pill);
-    text-transform: uppercase;
-    font-family: 'Poppins', sans-serif;
-    letter-spacing: 0.05em;
+    font-family: 'Onest', sans-serif;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-slide-btn:hover {
+    transform: translateY(-3px);
+}
+
+.hero-slider-dot.active {
+    background: var(--color-primary);
+}
+
+.trust-bar {
+    background: var(--cream2);
 }
 
 .trust-item {
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     box-shadow: none;
+    background: #fff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.trust-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-sm);
 }
 
 .trust-item svg {
     background: var(--color-primary-soft);
     color: var(--color-primary);
+    border-radius: 50%;
 }
 
 .trust-item-title {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Onest', sans-serif;
     font-weight: 600;
 }
 
 .home-panel-title {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.5rem;
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: var(--color-dark);
+}
+
+.home-panel-link {
+    font-family: 'Onest', sans-serif;
+    font-weight: 600;
 }
 
 .home-panel-link:hover {
@@ -410,44 +436,54 @@ body {
 }
 
 .category-tile {
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.category-tile:hover {
+    transform: translateY(-7px);
+    box-shadow: var(--shadow-md);
 }
 
 .category-name {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Onest', sans-serif;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
 }
 
-.product-card,
-.deal-card {
-    border-radius: var(--radius);
+.product-card {
+    border-radius: var(--radius-lg);
     border-color: var(--border-color);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
 .product-card:hover {
     border-color: var(--border-color);
     box-shadow: var(--shadow-md);
+    transform: translateY(-8px);
 }
 
 .product-card:hover .product-card-image {
-    transform: scale(1.06);
+    transform: scale(1.08);
 }
 
 .product-card-image {
-    transition: transform 0.35s ease;
+    transition: transform 0.5s ease;
 }
 
 .product-card-category {
-    font-family: var(--font-eyebrow);
+    font-family: 'Onest', sans-serif;
     font-weight: 700;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
-.product-card-name,
-.deal-card-name {
-    font-family: 'Poppins', sans-serif;
-    color: #666;
+.product-card-name {
+    font-family: 'Onest', serif;
+    font-weight: 700;
+    color: var(--color-dark);
 }
 
 .product-card-link:hover .product-card-name {
@@ -476,30 +512,32 @@ body {
 
 .price,
 .product-card-price {
-    color: #333;
-    font-family: 'Poppins', sans-serif;
+    color: var(--color-primary);
+    font-family: 'Onest', serif;
+    font-weight: 700;
 }
 
-.price-off,
-.deal-card-badge,
-.deal-card-tag {
-    background: var(--sale-badge);
+.price-off {
+    background: var(--color-primary);
     color: #fff;
+    border-radius: 7px;
 }
 
 /* ===================== Shop / category listing ===================== */
 .shop-rail,
 .shop-toolbar {
-    border-radius: var(--radius);
-    background: #f9f9f9;
+    border-radius: var(--radius-lg);
+    background: #fff;
     border-color: var(--border-color);
+    box-shadow: var(--shadow-sm);
 }
 
 .shop-rail-title {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Onest', sans-serif;
     text-transform: uppercase;
     font-size: 0.85rem;
     letter-spacing: 0.03em;
+    color: var(--color-dark);
 }
 
 .shop-facet-link:hover,
@@ -520,7 +558,8 @@ body {
 /* ===================== Product detail ===================== */
 .pdp-title {
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 900;
+    color: var(--color-dark);
 }
 
 .pdp-category:hover,
@@ -537,6 +576,7 @@ body {
 .qty-btn {
     border-radius: 50%;
     background: #fff;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .qty-btn:hover {
@@ -550,12 +590,12 @@ body {
 }
 
 .review-item-avatar {
-    background: var(--color-primary);
-    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    font-family: 'Onest', sans-serif;
 }
 
 .review-form-box {
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
 }
 
 .star-rating-input label,
@@ -571,13 +611,14 @@ body {
 .buybox,
 .order-head-card,
 .order-card {
-    border-radius: var(--radius);
-    box-shadow: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
     border-color: var(--border-color);
 }
 
 .cart-panel-title {
     font-family: var(--font-display);
+    font-weight: 700;
 }
 
 .cart-row-name:hover {
@@ -622,8 +663,8 @@ body {
 }
 
 .profile-hero {
-    background: linear-gradient(135deg, var(--color-primary) 0%, #222 100%);
-    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    border-radius: var(--radius-lg);
 }
 
 .profile-avatar,
@@ -642,155 +683,31 @@ body {
 
 /* ===================== Static pages: about / contact / faq ===================== */
 .faq-item {
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 .faq-question {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Onest', sans-serif;
 }
 
-.contact-info-item svg {
-    color: var(--color-primary);
-}
-
-.social-badge {
-    border-radius: 50%;
-}
-
-.social-badge-link:hover .social-badge {
-    background: var(--color-primary);
-}
-
-/* ===================== Mobile header: only cart + user icon stay in the row;
-   search and wishlist move into the hamburger menu popup instead ===================== */
+/* ===================== Mobile header: search/wishlist/cart/account icons stay
+   in the row at every breakpoint; only the Home/Shop/... links collapse into
+   the hamburger dropdown ===================== */
 @media (max-width: 640px) {
-    .site-header-primary-inner {
-        flex-wrap: nowrap;
-        padding: 5px;
-    }
-
-    .mobile-menu-toggle {
-        display: none;
-    }
-
-    /* Search box lives in the mobile nav popup now — don't reserve row space for it. */
-    .site-search {
-        display: none;
-    }
-
-    .site-header-actions {
-        margin-left: auto;
-        gap: 0;
-    }
-
-    /* Wishlist and the Orders shortcut move out of the row; wishlist reappears
-       inside the nav popup (.site-nav-wishlist-link) and Orders is still one
-       tap away inside the account/user menu. */
-    .site-header-wishlist,
-    .site-header-action.orders {
-        display: none;
-    }
-
-    .header-account,
-    .account-link,
-    .site-header-cart {
-        padding-left: 0.4rem;
-        padding-right: 0.4rem;
-    }
-
-    /* Account icon sits alone on mobile (text hidden) — center it like the
-       cart/wishlist icons instead of the desktop column/left-aligned layout.
-       Matches app.css's ".user-menu-trigger.header-account" specificity so
-       it actually wins here, without touching the desktop rule. */
-    .user-menu-trigger.header-account,
-    .account-link {
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* The popup nav sits on a white sheet, not the dark desktop bar — force
-       readable dark text/uppercase-off styling regardless of the unconditional
-       ".site-nav a" rule above. */
+    /* The popup nav sits on a white sheet, matching the desktop bar (now also
+       white) — keep readable dark text, no underline-grow effect on mobile. */
     .site-nav a {
-        color: #222;
-        text-transform: none;
-        letter-spacing: normal;
+        color: var(--color-dark);
         font-weight: 500;
+    }
+
+    .site-nav a::after {
+        display: none;
     }
 
     .site-nav a:hover,
     .site-nav a.active {
         color: var(--color-primary);
     }
-
-    /* Search box duplicated inside the mobile nav popup */
-    .site-nav-search {
-        display: flex;
-        align-items: stretch;
-        order: -2;
-        height: 46px;
-        margin: 0.75rem 0 0.5rem;
-        background: #f2f2f2;
-        border-radius: var(--radius-pill);
-        overflow: hidden;
-    }
-
-    .site-nav-search input {
-        flex: 1;
-        min-width: 0;
-        border: 0;
-        background: none;
-        padding: 0 1rem;
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.95rem;
-        color: #333;
-        outline: none;
-    }
-
-    .site-nav-search button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 46px;
-        border: 0;
-        background: none;
-        color: #222;
-        cursor: pointer;
-    }
-
-    /* Wishlist link duplicated inside the mobile nav popup */
-    .site-nav-wishlist-link {
-        order: 10;
-        display: flex !important;
-        align-items: center;
-        gap: 0.6rem;
-        position: relative;
-    }
-
-    .site-nav-search button svg,
-    .site-nav-wishlist-link svg {
-        width: var(--header-icon-size);
-        height: var(--header-icon-size);
-    }
-
-    .site-nav-wishlist-link .site-icon-count {
-        position: static;
-        margin-left: 0.25rem;
-        box-shadow: none;
-    }
-}
-
-/* Both hidden on desktop by default — mobile-only duplicates of search/wishlist
-   that live in the nav popup (shown by the media query above).
-   ".site-nav-wishlist-link" needs to beat app.css's ".site-nav a" rule (which
-   sets display:inline-flex and outranks a lone class selector on specificity),
-   otherwise the link — and its absolutely-positioned count badge — leaks
-   through and renders detached from the header on desktop. */
-.site-nav-search {
-    display: none;
-}
-
-.site-nav a.site-nav-wishlist-link {
-    display: none;
-    position: relative;
 }

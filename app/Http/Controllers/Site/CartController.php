@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Models\Size;
 use App\Support\Cart;
 use App\Support\OrderTotals;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CartController extends Controller
@@ -29,13 +31,25 @@ class CartController extends Controller
 
     public function store(Request $request, Product $product): JsonResponse
     {
-        $quantity = max(1, (int) $request->input('quantity', 1));
+        $validated = $request->validate([
+            'size' => ['required', 'string', Rule::in(Size::names())],
+            'quantity' => ['nullable', 'integer', 'min:1'],
+            'color_id' => ['nullable', 'integer', Rule::exists('product_colors', 'id')->where('product_id', $product->id)],
+        ]);
 
-        if ($product->stock < 1) {
-            return response()->json(['message' => 'This product is out of stock.'], 422);
+        if ($product->hasColors() && ! $request->filled('color_id')) {
+            return response()->json(['message' => 'Please select a color.'], 422);
         }
 
-        Cart::add($product->id, min($quantity, $product->stock));
+        $colorId = $request->filled('color_id') ? (int) $validated['color_id'] : null;
+        $quantity = max(1, (int) ($validated['quantity'] ?? 1));
+        $availableStock = $product->stockForSize($validated['size'], $colorId);
+
+        if ($availableStock < 1) {
+            return response()->json(['message' => 'This size is out of stock.'], 422);
+        }
+
+        Cart::add($product->id, $validated['size'], min($quantity, $availableStock), $colorId);
 
         return response()->json([
             'message' => 'Added to cart.',
@@ -45,9 +59,17 @@ class CartController extends Controller
 
     public function update(Request $request, Product $product): JsonResponse
     {
-        $quantity = (int) $request->input('quantity', 1);
+        $validated = $request->validate([
+            'size' => ['required', 'string', Rule::in(Size::names())],
+            'quantity' => ['nullable', 'integer'],
+            'color_id' => ['nullable', 'integer', Rule::exists('product_colors', 'id')->where('product_id', $product->id)],
+        ]);
 
-        Cart::update($product->id, min($quantity, $product->stock));
+        $colorId = $request->filled('color_id') ? (int) $validated['color_id'] : null;
+        $quantity = (int) ($validated['quantity'] ?? 1);
+        $availableStock = $product->stockForSize($validated['size'], $colorId);
+
+        Cart::update($product->id, $validated['size'], min($quantity, $availableStock), $colorId);
 
         return response()->json([
             'message' => 'Cart updated.',
@@ -56,9 +78,16 @@ class CartController extends Controller
         ]);
     }
 
-    public function destroy(Product $product): JsonResponse
+    public function destroy(Request $request, Product $product): JsonResponse
     {
-        Cart::remove($product->id);
+        $validated = $request->validate([
+            'size' => ['required', 'string', Rule::in(Size::names())],
+            'color_id' => ['nullable', 'integer', Rule::exists('product_colors', 'id')->where('product_id', $product->id)],
+        ]);
+
+        $colorId = $request->filled('color_id') ? (int) $validated['color_id'] : null;
+
+        Cart::remove($product->id, $validated['size'], $colorId);
 
         return response()->json([
             'message' => 'Item removed from cart.',

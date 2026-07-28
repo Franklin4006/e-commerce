@@ -4,38 +4,44 @@ namespace App\Support;
 
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\ProductColor;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class Cart
 {
-    protected const SESSION_KEY = 'cart';
+    // Bumped from 'cart': the guest cart shape changed from
+    // productId => size => qty to productId => colorId => size => qty when
+    // color support was added, so old sessions must not be read as the new
+    // shape (they'd crash array_sum() on a plain int instead of an array).
+    protected const SESSION_KEY = 'cart_v2';
 
-    public static function add(int $productId, int $quantity = 1): void
+    public static function add(int $productId, string $size, int $quantity = 1, ?int $colorId = null): void
     {
         $quantity = max(1, $quantity);
 
         if (Auth::check()) {
-            $item = CartItem::firstOrNew(['user_id' => Auth::id(), 'product_id' => $productId]);
+            $item = CartItem::firstOrNew(['user_id' => Auth::id(), 'product_id' => $productId, 'size' => $size, 'product_color_id' => $colorId]);
             $item->quantity = ($item->exists ? $item->quantity : 0) + $quantity;
             $item->save();
 
             return;
         }
 
+        $colorKey = $colorId ?? 0;
         $items = static::items();
-        $items[$productId] = ($items[$productId] ?? 0) + $quantity;
+        $items[$productId][$colorKey][$size] = ($items[$productId][$colorKey][$size] ?? 0) + $quantity;
         session([self::SESSION_KEY => $items]);
     }
 
-    public static function update(int $productId, int $quantity): void
+    public static function update(int $productId, string $size, int $quantity, ?int $colorId = null): void
     {
         if (Auth::check()) {
             if ($quantity <= 0) {
-                CartItem::where('user_id', Auth::id())->where('product_id', $productId)->delete();
+                CartItem::where('user_id', Auth::id())->where('product_id', $productId)->where('size', $size)->where('product_color_id', $colorId)->delete();
             } else {
                 CartItem::updateOrCreate(
-                    ['user_id' => Auth::id(), 'product_id' => $productId],
+                    ['user_id' => Auth::id(), 'product_id' => $productId, 'size' => $size, 'product_color_id' => $colorId],
                     ['quantity' => $quantity]
                 );
             }
@@ -43,27 +49,41 @@ class Cart
             return;
         }
 
+        $colorKey = $colorId ?? 0;
         $items = static::items();
 
         if ($quantity <= 0) {
-            unset($items[$productId]);
+            unset($items[$productId][$colorKey][$size]);
+            if (empty($items[$productId][$colorKey])) {
+                unset($items[$productId][$colorKey]);
+            }
+            if (empty($items[$productId])) {
+                unset($items[$productId]);
+            }
         } else {
-            $items[$productId] = $quantity;
+            $items[$productId][$colorKey][$size] = $quantity;
         }
 
         session([self::SESSION_KEY => $items]);
     }
 
-    public static function remove(int $productId): void
+    public static function remove(int $productId, string $size, ?int $colorId = null): void
     {
         if (Auth::check()) {
-            CartItem::where('user_id', Auth::id())->where('product_id', $productId)->delete();
+            CartItem::where('user_id', Auth::id())->where('product_id', $productId)->where('size', $size)->where('product_color_id', $colorId)->delete();
 
             return;
         }
 
+        $colorKey = $colorId ?? 0;
         $items = static::items();
-        unset($items[$productId]);
+        unset($items[$productId][$colorKey][$size]);
+        if (empty($items[$productId][$colorKey])) {
+            unset($items[$productId][$colorKey]);
+        }
+        if (empty($items[$productId])) {
+            unset($items[$productId]);
+        }
         session([self::SESSION_KEY => $items]);
     }
 
@@ -73,16 +93,23 @@ class Cart
             return (int) CartItem::where('user_id', Auth::id())->sum('quantity');
         }
 
-        return array_sum(static::items());
+        $total = 0;
+        foreach (static::items() as $colors) {
+            foreach ($colors as $sizes) {
+                $total += array_sum($sizes);
+            }
+        }
+
+        return $total;
     }
 
     public static function contents(): Collection
     {
         if (Auth::check()) {
-            return CartItem::with('product.category')
+            return CartItem::with('product.category', 'product.sizes', 'color')
                 ->where('user_id', Auth::id())
                 ->get()
-                ->map(fn (CartItem $item) => static::toLineItem($item->product, $item->quantity))
+                ->map(fn (CartItem $item) => static::toLineItem($item->product, $item->size, $item->quantity, $item->color))
                 ->filter()
                 ->values();
         }
@@ -93,12 +120,24 @@ class Cart
             return collect();
         }
 
-        $products = Product::with('category')->whereIn('id', array_keys($items))->get()->keyBy('id');
+        $products = Product::with('category', 'sizes', 'colors')->whereIn('id', array_keys($items))->get()->keyBy('id');
 
-        return collect($items)
-            ->map(fn ($quantity, $productId) => static::toLineItem($products->get($productId), $quantity))
-            ->filter()
-            ->values();
+        $lineItems = collect();
+
+        foreach ($items as $productId => $colors) {
+            $product = $products->get($productId);
+
+            foreach ($colors as $colorKey => $sizes) {
+                $colorId = (int) $colorKey ?: null;
+                $color = $colorId && $product ? $product->colors->firstWhere('id', $colorId) : null;
+
+                foreach ($sizes as $size => $quantity) {
+                    $lineItems->push(static::toLineItem($product, $size, $quantity, $color));
+                }
+            }
+        }
+
+        return $lineItems->filter()->values();
     }
 
     public static function total(): float
@@ -134,16 +173,22 @@ class Cart
     {
         $items = static::items();
 
-        foreach ($items as $productId => $quantity) {
-            $item = CartItem::firstOrNew(['user_id' => $userId, 'product_id' => $productId]);
-            $item->quantity = ($item->exists ? $item->quantity : 0) + $quantity;
-            $item->save();
+        foreach ($items as $productId => $colors) {
+            foreach ($colors as $colorKey => $sizes) {
+                $colorId = (int) $colorKey ?: null;
+
+                foreach ($sizes as $size => $quantity) {
+                    $item = CartItem::firstOrNew(['user_id' => $userId, 'product_id' => $productId, 'size' => $size, 'product_color_id' => $colorId]);
+                    $item->quantity = ($item->exists ? $item->quantity : 0) + $quantity;
+                    $item->save();
+                }
+            }
         }
 
         session()->forget(self::SESSION_KEY);
     }
 
-    protected static function toLineItem(?Product $product, int $quantity): ?array
+    protected static function toLineItem(?Product $product, string $size, int $quantity, ?ProductColor $color = null): ?array
     {
         if (! $product) {
             return null;
@@ -151,6 +196,8 @@ class Cart
 
         return [
             'product' => $product,
+            'size' => $size,
+            'color' => $color,
             'quantity' => $quantity,
             'subtotal' => $product->sale_price * $quantity,
             'mrp_subtotal' => $product->mrp * $quantity,

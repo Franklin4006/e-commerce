@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SizeController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -37,13 +39,27 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
+        Route::get('/sizes', [SizeController::class, 'index'])->name('sizes.index');
+        Route::get('/sizes/create', [SizeController::class, 'create'])->name('sizes.create');
+        Route::post('/sizes', [SizeController::class, 'store'])->name('sizes.store');
+        Route::get('/sizes/{size}/edit', [SizeController::class, 'edit'])->name('sizes.edit');
+        Route::put('/sizes/{size}', [SizeController::class, 'update'])->name('sizes.update');
+        Route::delete('/sizes/{size}', [SizeController::class, 'destroy'])->name('sizes.destroy');
+
+        Route::get('/colors', [ColorController::class, 'index'])->name('colors.index');
+        Route::get('/colors/create', [ColorController::class, 'create'])->name('colors.create');
+        Route::post('/colors', [ColorController::class, 'store'])->name('colors.store');
+        Route::get('/colors/{color}/edit', [ColorController::class, 'edit'])->name('colors.edit');
+        Route::put('/colors/{color}', [ColorController::class, 'update'])->name('colors.update');
+        Route::delete('/colors/{color}', [ColorController::class, 'destroy'])->name('colors.destroy');
+
         Route::get('/products', [ProductController::class, 'index'])->name('products.index');
         Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
         Route::post('/products', [ProductController::class, 'store'])->name('products.store');
         Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
         Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
         Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-        Route::delete('/products/{product}/images/{image}', [ProductController::class, 'destroyImage'])->name('products.images.destroy');
+        Route::delete('/products/{product}/color-images/{image}', [ProductController::class, 'destroyColorImage'])->name('products.color-images.destroy');
 
         Route::get('/banners', [BannerController::class, 'index'])->name('banners.index');
         Route::get('/banners/{banner}', [BannerController::class, 'show'])->name('banners.show');

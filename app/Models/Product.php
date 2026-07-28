@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -48,6 +49,29 @@ class Product extends Model
         return $this->stock <= (int) Setting::get('low_stock_threshold', 5);
     }
 
+    public function stockForSize(string $size, ?int $colorId = null): int
+    {
+        return (int) ($this->sizes->where('product_color_id', $colorId)->firstWhere('size', $size)->stock ?? 0);
+    }
+
+    public function availableSizes(?int $colorId = null): Collection
+    {
+        return $this->sizes
+            ->where('product_color_id', $colorId)
+            ->filter(fn (ProductSize $size) => $size->stock > 0)
+            ->values();
+    }
+
+    public function hasColors(): bool
+    {
+        return $this->colors->isNotEmpty();
+    }
+
+    public function stockForColor(int $colorId): int
+    {
+        return (int) $this->sizes->where('product_color_id', $colorId)->sum('stock');
+    }
+
     protected static function booted(): void
     {
         static::saving(function (Product $product) {
@@ -60,11 +84,6 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
-    }
-
-    public function images(): HasMany
-    {
-        return $this->hasMany(ProductImage::class);
     }
 
     public function specifications(): HasMany
@@ -81,6 +100,16 @@ class Product extends Model
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class)->latest();
+    }
+
+    public function sizes(): HasMany
+    {
+        return $this->hasMany(ProductSize::class);
+    }
+
+    public function colors(): HasMany
+    {
+        return $this->hasMany(ProductColor::class)->orderBy('sort_order');
     }
 
     public function reviews(): HasMany

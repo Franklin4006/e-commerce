@@ -18,7 +18,14 @@ class HomeController extends Controller
             ->where('status', true)
             ->orderBy('priority')
             ->latest()
-            ->take(8)
+            ->take(10)
+            ->get();
+
+        // Most recently added products for the "New Arrivals" strip.
+        $newArrivals = Product::with('category')
+            ->where('status', true)
+            ->latest()
+            ->take(10)
             ->get();
 
         // Top discounted, in-stock products for the "Today's Deals" strip.
@@ -27,9 +34,9 @@ class HomeController extends Controller
             ->where('stock', '>', 0)
             ->whereColumn('sale_price', '<', 'mrp')
             ->orderByRaw('(mrp - sale_price) / NULLIF(mrp, 0) DESC')
-            ->take(12)
+            ->take(10)
             ->get();
 
-        return view('site.home', compact('banners', 'categories', 'products', 'deals'));
+        return view('site.home', compact('banners', 'categories', 'products', 'newArrivals', 'deals'));
     }
 }

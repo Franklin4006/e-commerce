@@ -55,10 +55,19 @@
 
                 <template id="product-row-template">
                     <div class="product-row" style="display: flex; gap: 0.75rem; align-items: flex-start; margin-bottom: 0.75rem;">
-                        <select name="product_id[]" class="form-control" data-searchable-select required>
+                        <select name="product_id[]" class="form-control admin-order-product-select" data-searchable-select required>
                             <option value="">Select a product</option>
                             @foreach ($products as $product)
-                                <option value="{{ $product->id }}">{{ $product->name }} (Stock: {{ $product->stock }})</option>
+                                <option value="{{ $product->id }}" data-colors='{{ $product->colors->map(fn ($c) => ["id" => $c->id, "name" => $c->name])->toJson() }}'>{{ $product->name }} (Stock: {{ $product->stock }})</option>
+                            @endforeach
+                        </select>
+                        <select name="color_id[]" class="form-control admin-order-color-select" style="max-width: 140px; display: none;">
+                            <option value="">Color</option>
+                        </select>
+                        <select name="size[]" class="form-control" style="max-width: 100px;" required>
+                            <option value="">Size</option>
+                            @foreach (\App\Models\Size::names() as $sizeOption)
+                                <option value="{{ $sizeOption }}">{{ $sizeOption }}</option>
                             @endforeach
                         </select>
                         <input type="number" name="quantity[]" value="1" min="1" class="form-control" style="max-width: 100px;" required>

@@ -2,15 +2,15 @@
     <p class="breadcrumb"><a href="{{ route('home') }}">Home</a> / Search</p>
 
     @if ($query !== '')
-        <h1 class="page-title">Search results for &ldquo;{{ $query }}&rdquo;</h1>
+        <h1 class="page-title" data-aos="fade-up">Search results for &ldquo;{{ $query }}&rdquo;</h1>
     @else
-        <h1 class="page-title">Search</h1>
+        <h1 class="page-title" data-aos="fade-up">Search</h1>
     @endif
 
     @if ($products->isNotEmpty())
         <div class="product-grid">
             @foreach ($products as $product)
-                @include('site.partials._product-card')
+                @include('site.partials._product-card', ['aosDelay' => $loop->index % 4 * 70])
             @endforeach
         </div>
     @else

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Banner;
+use App\Models\Category;
 use Database\Seeders\Concerns\GeneratesPlaceholderImages;
 use Illuminate\Database\Seeder;
 
@@ -15,33 +16,36 @@ class BannerSeeder extends Seeder
      */
     public function run(): void
     {
+        $kurthis = Category::where('name', 'Kurthis')->first();
+        $westernWear = Category::where('name', 'Western Wear')->first();
+
         $banners = [
             [
-                'title' => 'Big Season Sale',
-                'sub_title' => 'Up to 50% off on Electronics',
-                'title_position' => 'center',
-                'button_text' => 'Shop Now',
-                'button_url' => 'https://example.com/sale',
-                'button_color' => '#4f46e5',
-                'color' => '#2563eb',
+                'title' => 'New Season Kurthis',
+                'sub_title' => 'Fresh prints, ethnic elegance',
+                'title_position' => 'bottom-left',
+                'button_text' => 'Shop Kurthis',
+                'button_url' => $kurthis ? route('category.show', $kurthis) : route('shop.index'),
+                'button_color' => '#be185d',
+                'color' => '#be185d',
             ],
             [
-                'title' => 'New Fashion Arrivals',
-                'sub_title' => 'Fresh styles for the new season',
-                'title_position' => 'bottom-left',
-                'button_text' => 'Explore Collection',
-                'button_url' => 'https://example.com/fashion',
-                'button_color' => '#db2777',
+                'title' => 'The Western Wear Edit',
+                'sub_title' => 'Denim jackets, co-ords & jumpsuits',
+                'title_position' => 'center',
+                'button_text' => 'Explore Now',
+                'button_url' => $westernWear ? route('category.show', $westernWear) : route('shop.index'),
+                'button_color' => '#8a0f45',
                 'color' => '#db2777',
             ],
             [
-                'title' => 'Home Essentials',
-                'sub_title' => 'Everything you need for your home',
+                'title' => 'Sizes M to XXL, Styled for You',
+                'sub_title' => 'Every piece, every size, in stock',
                 'title_position' => 'top-right',
-                'button_text' => 'View Deals',
-                'button_url' => 'https://example.com/home',
-                'button_color' => '#059669',
-                'color' => '#059669',
+                'button_text' => 'Shop All',
+                'button_url' => route('shop.index'),
+                'button_color' => '#f6a623',
+                'color' => '#a21caf',
             ],
         ];
 

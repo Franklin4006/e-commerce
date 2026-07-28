@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Review;
@@ -13,7 +14,7 @@ class ProductController extends Controller
 {
     public function show(Product $product): View
     {
-        $product->load('images', 'category', 'approvedReviews.user', 'specifications');
+        $product->load('colors.images', 'category', 'approvedReviews.user', 'specifications', 'sizes');
 
         $alreadyReviewed = false;
         $canReview = false;
@@ -31,8 +32,16 @@ class ProductController extends Controller
         }
 
         $relatedProducts = $this->relatedProductsFor($product);
+        $activeCoupons = $this->activeCoupons();
 
-        return view('site.product', compact('product', 'alreadyReviewed', 'canReview', 'relatedProducts'));
+        return view('site.product', compact('product', 'alreadyReviewed', 'canReview', 'relatedProducts', 'activeCoupons'));
+    }
+
+    public function quickView(Product $product): View
+    {
+        $product->load('sizes', 'colors.images');
+
+        return view('site.partials._quick-view', compact('product'));
     }
 
     /**
@@ -58,5 +67,20 @@ class ProductController extends Controller
         }
 
         return $related->take($limit);
+    }
+
+    /**
+     * Site-wide coupons currently usable, for the PDP's "Available Offers"
+     * box — real, live coupon data (never fabricated bank/card offers).
+     */
+    private function activeCoupons(int $limit = 3): Collection
+    {
+        return Coupon::where('is_active', true)
+            ->where(fn ($q) => $q->whereNull('starts_at')->orWhere('starts_at', '<=', now()))
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>=', now()))
+            ->where(fn ($q) => $q->whereNull('usage_limit')->orWhereColumn('used_count', '<', 'usage_limit'))
+            ->orderByDesc('value')
+            ->take($limit)
+            ->get();
     }
 }

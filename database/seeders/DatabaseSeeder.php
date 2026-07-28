@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
             SettingSeeder::class,
             EmailTemplateSeeder::class,
             CategorySeeder::class,
+            SizeSeeder::class,
+            ColorSeeder::class,
             ProductSeeder::class,
             BannerSeeder::class,
             FaqSeeder::class,

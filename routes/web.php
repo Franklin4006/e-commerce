@@ -39,6 +39,7 @@ Route::get('/terms-of-service', [TermsController::class, 'index'])->name('terms.
 Route::get('/privacy-policy', [PrivacyController::class, 'index'])->name('privacy.index');
 Route::get('/category/{category:slug}', [CategoryController::class, 'show'])->name('category.show');
 Route::get('/product/{product:slug}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/product/{product:slug}/quick-view', [ProductController::class, 'quickView'])->name('product.quick-view');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/{product}', [CartController::class, 'store'])->name('cart.store');

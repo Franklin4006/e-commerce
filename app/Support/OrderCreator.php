@@ -6,6 +6,7 @@ use App\Mail\TemplatedMail;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductSize;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -16,7 +17,7 @@ use RuntimeException;
 class OrderCreator
 {
     /**
-     * @param  array<int, array{product_id: int, product_name: string, quantity: int, mrp: float, sale_price: float, subtotal: float}>  $itemsData
+     * @param  array<int, array{product_id: int, product_name: string, size: string, color_id: ?int, color_name: ?string, quantity: int, mrp: float, sale_price: float, subtotal: float}>  $itemsData
      * @param  array{totalMrp: float, total: float, savings: float, shippingCharge: ?float, couponCode?: ?string, couponDiscount?: float, grandTotal: float}  $totals
      * @param  array<string, mixed>  $extra
      */
@@ -31,16 +32,24 @@ class OrderCreator
         array $extra = []
     ): Order {
         return DB::transaction(function () use ($user, $itemsData, $shippingAddress, $billingAddress, $totals, $paymentMethod, $paymentStatus, $extra) {
-            $stockBeforeByProductId = [];
+            $sizeRowsByKey = [];
 
             foreach ($itemsData as $item) {
-                $product = Product::whereKey($item['product_id'])->lockForUpdate()->first();
+                $key = $item['product_id'].':'.($item['color_id'] ?? 'none').':'.$item['size'];
+                $sizeRow = ProductSize::where('product_id', $item['product_id'])
+                    ->where('product_color_id', $item['color_id'] ?? null)
+                    ->where('size', $item['size'])
+                    ->lockForUpdate()
+                    ->first();
 
-                if (! $product || $product->stock < $item['quantity']) {
-                    throw new RuntimeException("Sorry, \"{$item['product_name']}\" doesn't have enough stock available.");
+                if (! $sizeRow || $sizeRow->stock < $item['quantity']) {
+                    $variantLabel = $item['color_name'] ?? null;
+                    $variantLabel = $variantLabel ? "{$variantLabel}, size {$item['size']}" : "size {$item['size']}";
+
+                    throw new RuntimeException("Sorry, \"{$item['product_name']}\" ({$variantLabel}) doesn't have enough stock available.");
                 }
 
-                $stockBeforeByProductId[$item['product_id']] = $product->stock;
+                $sizeRowsByKey[$key] = $sizeRow;
             }
 
             $order = Order::create(array_merge([
@@ -86,19 +95,26 @@ class OrderCreator
                 $order->items()->create([
                     'product_id' => $item['product_id'],
                     'product_name' => $item['product_name'],
+                    'size' => $item['size'],
+                    'product_color_id' => $item['color_id'] ?? null,
+                    'color_name' => $item['color_name'] ?? null,
                     'quantity' => $item['quantity'],
                     'mrp' => $item['mrp'],
                     'sale_price' => $item['sale_price'],
                     'subtotal' => $item['subtotal'],
                 ]);
 
-                Product::whereKey($item['product_id'])->decrement('stock', $item['quantity']);
+                $key = $item['product_id'].':'.($item['color_id'] ?? 'none').':'.$item['size'];
+                $sizeRow = $sizeRowsByKey[$key];
+                $sizeRow->decrement('stock', $item['quantity']);
 
                 StockMovement::create([
                     'product_id' => $item['product_id'],
+                    'size' => $item['size'],
+                    'product_color_id' => $item['color_id'] ?? null,
                     'order_id' => $order->id,
                     'quantity_change' => -$item['quantity'],
-                    'stock_after' => $stockBeforeByProductId[$item['product_id']] - $item['quantity'],
+                    'stock_after' => $sizeRow->stock,
                     'reason' => 'Order placed',
                 ]);
             }
@@ -108,13 +124,16 @@ class OrderCreator
     }
 
     /**
-     * @return array<int, array{product_id: int, product_name: string, quantity: int, mrp: float, sale_price: float, subtotal: float}>
+     * @return array<int, array{product_id: int, product_name: string, size: string, color_id: ?int, color_name: ?string, quantity: int, mrp: float, sale_price: float, subtotal: float}>
      */
     public static function snapshotItems(Collection $items): array
     {
         return $items->map(fn ($item) => [
             'product_id' => $item['product']->id,
             'product_name' => $item['product']->name,
+            'size' => $item['size'],
+            'color_id' => $item['color']?->id,
+            'color_name' => $item['color']?->name,
             'quantity' => $item['quantity'],
             'mrp' => (float) $item['product']->mrp,
             'sale_price' => (float) $item['product']->sale_price,
@@ -123,13 +142,13 @@ class OrderCreator
     }
 
     /**
-     * @param  array<int, array{product_id: int|string, quantity: int|string}>  $pairs
-     * @return array<int, array{product_id: int, product_name: string, quantity: int, mrp: float, sale_price: float, subtotal: float}>
+     * @param  array<int, array{product_id: int|string, size: string, color_id: int|string|null, quantity: int|string}>  $pairs
+     * @return array<int, array{product_id: int, product_name: string, size: string, color_id: ?int, color_name: ?string, quantity: int, mrp: float, sale_price: float, subtotal: float}>
      */
     public static function snapshotItemsFromInput(array $pairs): array
     {
         $productIds = collect($pairs)->pluck('product_id')->unique()->all();
-        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+        $products = Product::with('colors')->whereIn('id', $productIds)->get()->keyBy('id');
 
         return collect($pairs)->map(function ($pair) use ($products) {
             $product = $products->get((int) $pair['product_id']);
@@ -138,11 +157,21 @@ class OrderCreator
                 throw new RuntimeException('One of the selected products could not be found.');
             }
 
+            $colorId = ! empty($pair['color_id']) ? (int) $pair['color_id'] : null;
+            $color = $colorId ? $product->colors->firstWhere('id', $colorId) : null;
+
+            if ($colorId && ! $color) {
+                throw new RuntimeException("The selected color for \"{$product->name}\" could not be found.");
+            }
+
             $quantity = (int) $pair['quantity'];
 
             return [
                 'product_id' => $product->id,
                 'product_name' => $product->name,
+                'size' => $pair['size'],
+                'color_id' => $color?->id,
+                'color_name' => $color?->name,
                 'quantity' => $quantity,
                 'mrp' => (float) $product->mrp,
                 'sale_price' => (float) $product->sale_price,

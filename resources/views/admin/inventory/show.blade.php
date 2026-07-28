@@ -9,6 +9,30 @@
         </span>
     </div>
 
+    @if ($product->colors->isEmpty())
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+            @foreach (\App\Models\Size::names() as $sizeOption)
+                @php $sizeStock = $product->sizes->firstWhere('size', $sizeOption)->stock ?? 0; @endphp
+                <span class="badge {{ $sizeStock > 0 ? 'badge-success' : 'badge-danger' }}">{{ $sizeOption }}: {{ $sizeStock }}</span>
+            @endforeach
+        </div>
+    @else
+        <div style="margin-bottom: 1.5rem;">
+            @foreach ($product->colors as $color)
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    @if ($color->hex)
+                        <span style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: {{ $color->hex }}; border: 1px solid var(--border-color, #e5e7eb);"></span>
+                    @endif
+                    <strong style="min-width: 100px;">{{ $color->name }}</strong>
+                    @foreach (\App\Models\Size::names() as $sizeOption)
+                        @php $sizeStock = $color->sizes->firstWhere('size', $sizeOption)->stock ?? 0; @endphp
+                        <span class="badge {{ $sizeStock > 0 ? 'badge-success' : 'badge-danger' }}">{{ $sizeOption }}: {{ $sizeStock }}</span>
+                    @endforeach
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     @if (session('status'))
         <div class="alert alert-success">
             <p>{{ session('status') }}</p>
@@ -29,6 +53,28 @@
 
             <form method="POST" action="{{ route('admin.inventory.adjust', $product) }}">
                 @csrf
+
+                @if ($product->colors->isNotEmpty())
+                    <div class="form-group">
+                        <label for="color_id" class="form-label">Color</label>
+                        <select id="color_id" name="color_id" class="form-control" required>
+                            @foreach ($product->colors as $color)
+                                <option value="{{ $color->id }}" @selected((string) old('color_id') === (string) $color->id)>{{ $color->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('color_id') <span class="field-error">{{ $message }}</span> @enderror
+                    </div>
+                @endif
+
+                <div class="form-group">
+                    <label for="size" class="form-label">Size</label>
+                    <select id="size" name="size" class="form-control" required>
+                        @foreach (\App\Models\Size::names() as $sizeOption)
+                            <option value="{{ $sizeOption }}" @selected(old('size') === $sizeOption)>{{ $sizeOption }}</option>
+                        @endforeach
+                    </select>
+                    @error('size') <span class="field-error">{{ $message }}</span> @enderror
+                </div>
 
                 <div class="form-group">
                     <label for="direction" class="form-label">Direction</label>
@@ -68,6 +114,8 @@
                         </div>
                         <p class="status-timeline-note">
                             {{ $movement->reason }}
+                            @if ($movement->color) &middot; Color: {{ $movement->color->name }} @endif
+                            @if ($movement->size) &middot; Size: {{ $movement->size }} @endif
                             @if ($movement->order) (Order {{ $movement->order->order_number }}) @endif
                             &middot; Stock after: {{ $movement->stock_after }}
                         </p>

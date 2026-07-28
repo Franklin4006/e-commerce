@@ -50,7 +50,11 @@
             });
     }
 
-    function updateQuantity(productId, quantity) {
+    function colorIdFromDataset(el) {
+        return el.dataset.colorId ? parseInt(el.dataset.colorId, 10) : null;
+    }
+
+    function updateQuantity(productId, size, quantity, colorId) {
         return fetch('/cart/' + productId, {
             method: 'PUT',
             headers: {
@@ -59,20 +63,22 @@
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ quantity: quantity }),
+            body: JSON.stringify({ size: size, quantity: quantity, color_id: colorId }),
         }).then(function (res) {
             return res.json();
         });
     }
 
-    function removeItem(productId) {
+    function removeItem(productId, size, colorId) {
         return fetch('/cart/' + productId, {
             method: 'DELETE',
             headers: {
+                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
             },
+            body: JSON.stringify({ size: size, color_id: colorId }),
         }).then(function (res) {
             return res.json();
         });
@@ -91,7 +97,7 @@
                 next = 1;
             }
 
-            updateQuantity(input.dataset.productId, next).then(function (body) {
+            updateQuantity(input.dataset.productId, input.dataset.size, next, colorIdFromDataset(input)).then(function (body) {
                 updateCartCount(body.count);
                 reload();
             });
@@ -99,7 +105,7 @@
         }
 
         if (removeBtn) {
-            removeItem(removeBtn.dataset.productId).then(function (body) {
+            removeItem(removeBtn.dataset.productId, removeBtn.dataset.size, colorIdFromDataset(removeBtn)).then(function (body) {
                 updateCartCount(body.count);
                 showToast('Item removed from cart.', 'success');
                 reload();
@@ -118,7 +124,7 @@
             qty = 1;
         }
 
-        updateQuantity(input.dataset.productId, qty).then(function (body) {
+        updateQuantity(input.dataset.productId, input.dataset.size, qty, colorIdFromDataset(input)).then(function (body) {
             updateCartCount(body.count);
             reload();
         });

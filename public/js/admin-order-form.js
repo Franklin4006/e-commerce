@@ -17,6 +17,49 @@
         });
     }
 
+    // Colors are per-product, so the color <select> for a row is rebuilt
+    // from the chosen product option's data-colors JSON every time the
+    // product changes; hidden and non-required when that product has none.
+    function bindColorSync(row) {
+        var productSelect = row.querySelector('.admin-order-product-select');
+        var colorSelect = row.querySelector('.admin-order-color-select');
+
+        if (!productSelect || !colorSelect || productSelect.dataset.colorBound) {
+            return;
+        }
+        productSelect.dataset.colorBound = 'true';
+
+        productSelect.addEventListener('change', function () {
+            var option = productSelect.options[productSelect.selectedIndex];
+            var colors = [];
+
+            try {
+                colors = JSON.parse((option && option.dataset.colors) || '[]');
+            } catch (e) {
+                colors = [];
+            }
+
+            colorSelect.innerHTML = '<option value="">Color</option>';
+
+            if (colors.length === 0) {
+                colorSelect.style.display = 'none';
+                colorSelect.required = false;
+                colorSelect.value = '';
+                return;
+            }
+
+            colors.forEach(function (color) {
+                var opt = document.createElement('option');
+                opt.value = color.id;
+                opt.textContent = color.name;
+                colorSelect.appendChild(opt);
+            });
+
+            colorSelect.style.display = '';
+            colorSelect.required = true;
+        });
+    }
+
     function addRow() {
         var clone = template.content.cloneNode(true);
         rowsContainer.appendChild(clone);
@@ -26,6 +69,7 @@
         }
 
         bindRemoveButtons();
+        bindColorSync(rowsContainer.lastElementChild);
     }
 
     if (template && rowsContainer && addBtn) {

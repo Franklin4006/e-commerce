@@ -68,7 +68,16 @@
                     <tbody>
                         @foreach ($order->items as $item)
                             <tr>
-                                <td class="order-item-name">{{ $item->product_name }}</td>
+                                <td class="order-item-name">
+                                    {{ $item->product_name }}
+                                    @if ($item->size || $item->color_name)
+                                        <br>
+                                        <small style="color: var(--text-muted);">
+                                            @if ($item->color_name) {{ $item->color_name }} @endif
+                                            @if ($item->size) @if ($item->color_name) &middot; @endif Size {{ $item->size }} @endif
+                                        </small>
+                                    @endif
+                                </td>
                                 <td>{{ $item->quantity }}</td>
                                 <td class="text-right">₹{{ number_format($item->sale_price, 2) }}</td>
                                 <td class="text-right">₹{{ number_format($item->subtotal, 2) }}</td>

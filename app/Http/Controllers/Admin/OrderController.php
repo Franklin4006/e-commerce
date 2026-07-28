@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductSize;
+use App\Models\Size;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Support\Invoice;
@@ -49,24 +51,30 @@ class OrderController extends Controller
         DB::transaction(function () use ($request, $order, $validated) {
             if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
                 foreach ($order->items as $item) {
-                    if (! $item->product_id) {
+                    if (! $item->product_id || ! $item->size) {
                         continue;
                     }
 
-                    $product = Product::whereKey($item->product_id)->lockForUpdate()->first();
+                    $sizeRow = ProductSize::where('product_id', $item->product_id)
+                        ->where('product_color_id', $item->product_color_id)
+                        ->where('size', $item->size)
+                        ->lockForUpdate()
+                        ->first();
 
-                    if (! $product) {
+                    if (! $sizeRow) {
                         continue;
                     }
 
-                    $product->increment('stock', $item->quantity);
+                    $sizeRow->increment('stock', $item->quantity);
 
                     StockMovement::create([
-                        'product_id' => $product->id,
+                        'product_id' => $item->product_id,
+                        'size' => $item->size,
+                        'product_color_id' => $item->product_color_id,
                         'order_id' => $order->id,
                         'changed_by' => $request->user()->id,
                         'quantity_change' => $item->quantity,
-                        'stock_after' => $product->stock,
+                        'stock_after' => $sizeRow->stock,
                         'reason' => 'Order cancelled',
                     ]);
                 }
@@ -119,7 +127,7 @@ class OrderController extends Controller
         }
 
         $customer->load(['addresses' => fn ($query) => $query->orderByDesc('is_default')]);
-        $products = Product::where('status', true)->orderBy('name')->get();
+        $products = Product::with('colors')->where('status', true)->orderBy('name')->get();
 
         return view('admin.orders.create', ['customer' => $customer, 'customers' => collect(), 'products' => $products]);
     }
@@ -130,6 +138,10 @@ class OrderController extends Controller
             'customer_id' => ['required', 'integer'],
             'product_id' => ['required', 'array', 'min:1'],
             'product_id.*' => ['required', 'integer', 'exists:products,id'],
+            'size' => ['required', 'array', 'min:1'],
+            'size.*' => ['required', Rule::in(Size::names())],
+            'color_id' => ['nullable', 'array'],
+            'color_id.*' => ['nullable', 'integer'],
             'quantity' => ['required', 'array', 'min:1'],
             'quantity.*' => ['required', 'integer', 'min:1'],
             'payment_method' => ['required', 'in:cod,manual'],
@@ -203,6 +215,8 @@ class OrderController extends Controller
 
         $pairs = collect($validated['product_id'])->map(fn ($productId, $i) => [
             'product_id' => $productId,
+            'size' => $validated['size'][$i],
+            'color_id' => $validated['color_id'][$i] ?? null,
             'quantity' => $validated['quantity'][$i],
         ])->values()->all();
 

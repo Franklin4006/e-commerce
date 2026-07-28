@@ -19,7 +19,11 @@
 
                             <div class="cart-row-info">
                                 <a href="{{ route('product.show', $item['product']) }}" class="cart-row-name">{{ $item['product']->name }}</a>
-                                @if ($item['product']->stock > 0)
+                                @if ($item['color'])
+                                    <span class="cart-row-size">Color: {{ $item['color']->name }}</span>
+                                @endif
+                                <span class="cart-row-size">Size: {{ $item['size'] }}</span>
+                                @if ($item['product']->stockForSize($item['size'], $item['color']?->id) > 0)
                                     <span class="cart-row-stock in-stock">In stock</span>
                                 @else
                                     <span class="cart-row-stock out-of-stock">Out of stock</span>
@@ -27,10 +31,10 @@
                                 <div class="cart-row-controls">
                                     <div class="qty-stepper cart-row-qty">
                                         <button type="button" class="qty-btn" data-action="cart-qty-decrease">&minus;</button>
-                                        <input type="text" class="qty-input" value="{{ $item['quantity'] }}" data-product-id="{{ $item['product']->id }}" inputmode="numeric" aria-label="Quantity">
+                                        <input type="text" class="qty-input" value="{{ $item['quantity'] }}" data-product-id="{{ $item['product']->id }}" data-size="{{ $item['size'] }}" data-color-id="{{ $item['color']?->id }}" inputmode="numeric" aria-label="Quantity">
                                         <button type="button" class="qty-btn" data-action="cart-qty-increase">+</button>
                                     </div>
-                                    <button type="button" class="cart-row-delete" data-action="cart-remove" data-product-id="{{ $item['product']->id }}">Delete</button>
+                                    <button type="button" class="cart-row-delete" data-action="cart-remove" data-product-id="{{ $item['product']->id }}" data-size="{{ $item['size'] }}" data-color-id="{{ $item['color']?->id }}">Delete</button>
                                 </div>
                             </div>
 

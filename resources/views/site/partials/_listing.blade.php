@@ -1,9 +1,10 @@
 @php
     // Shared product-listing layout: left filter rail + sort toolbar + grid.
-    // Expects: $products, $categories, $activeCategory, $min, $max, $sort, $filterAction
+    // Expects: $products, $categories, $activeCategory, $min, $max, $sizes, $sort, $filterAction
     // and $listingMode ('shop' | 'category').
     $isCategoryMode = ($listingMode ?? 'shop') === 'category';
-    $hasFilters = $activeCategory || $min !== null || $max !== null || ($sort && $sort !== 'featured');
+    $sizes = $sizes ?? [];
+    $hasFilters = $activeCategory || $min !== null || $max !== null || ! empty($sizes) || ($sort && $sort !== 'featured');
 @endphp
 
 <form method="GET" action="{{ $filterAction }}" class="shop-layout">
@@ -44,6 +45,18 @@
             </div>
         </div>
 
+        <div class="shop-rail-group">
+            <h3 class="shop-rail-title">Size</h3>
+            <div class="shop-size-options">
+                @foreach (\App\Models\Size::names() as $sizeOption)
+                    <label class="shop-size-option">
+                        <input type="checkbox" name="sizes[]" value="{{ $sizeOption }}" @checked(in_array($sizeOption, $sizes))>
+                        <span>{{ $sizeOption }}</span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+
         <div class="shop-rail-actions">
             <button type="submit" class="btn btn-primary btn-sm">Apply</button>
             @if ($hasFilters)
@@ -75,7 +88,7 @@
         @else
             <div class="product-grid">
                 @foreach ($products as $product)
-                    @include('site.partials._product-card')
+                    @include('site.partials._product-card', ['aosDelay' => $loop->index % 4 * 70, 'shortPrice' => true])
                 @endforeach
             </div>
 
