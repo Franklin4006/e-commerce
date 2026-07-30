@@ -69,6 +69,35 @@ return [
             HTML,
     ],
 
+    'order-status-update' => [
+        'name' => 'Order Status Update',
+        'subject' => 'Your order {{ order_number }} is now {{ status }}',
+        'description' => 'Sent to the customer when an admin updates an order\'s status. Available variables: {{ name }}, {{ order_number }}, {{ status }}, {{ order_url }}. Also available everywhere: {{ site_name }}, {{ primary_color }}.',
+        'body' => <<<'HTML'
+            <h2 style="margin:0 0 16px; font-size:20px; color:#101828;">Your order status has been updated</h2>
+            <p style="margin:0 0 16px;">Hi {{ name }},</p>
+            <p style="margin:0 0 24px;">Here's an update on your order:</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px; background-color:#f8f9fb; border-radius:8px;">
+                <tr>
+                    <td style="padding:16px 20px; font-size:14px; color:#344054;">Order Number</td>
+                    <td style="padding:16px 20px; font-size:14px; color:#101828; font-weight:600; text-align:right;">{{ order_number }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:0 20px 16px; font-size:14px; color:#344054; border-top:1px solid #eef0f3;">Status</td>
+                    <td style="padding:0 20px 16px; font-size:14px; color:#101828; font-weight:600; text-align:right; border-top:1px solid #eef0f3;">{{ status }}</td>
+                </tr>
+            </table>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                <tr>
+                    <td style="border-radius:8px; background-color:{{ primary_color }};">
+                        <a href="{{ order_url }}" style="display:inline-block; padding:14px 32px; font-size:15px; font-weight:600; color:#ffffff; text-decoration:none; border-radius:8px;">View Order</a>
+                    </td>
+                </tr>
+            </table>
+            <p style="margin:0; font-size:13px; color:#667085;">If you have any questions about your order, just reply to this email.</p>
+            HTML,
+    ],
+
     'contact-inquiry' => [
         'name' => 'Contact Inquiry Notification',
         'subject' => 'New contact inquiry from {{ name }}',

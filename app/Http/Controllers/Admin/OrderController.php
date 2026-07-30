@@ -48,6 +48,8 @@ class OrderController extends Controller
             'note' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        $statusChanged = $order->status !== $validated['status'];
+
         DB::transaction(function () use ($request, $order, $validated) {
             if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
                 foreach ($order->items as $item) {
@@ -88,6 +90,10 @@ class OrderController extends Controller
                 'changed_by' => $request->user()->id,
             ]);
         });
+
+        if ($statusChanged) {
+            OrderCreator::sendStatusUpdateEmail($order);
+        }
 
         return back()->with('status', 'Order status updated successfully.');
     }
