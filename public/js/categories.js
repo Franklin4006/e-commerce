@@ -8,9 +8,6 @@
     var nameInput = document.getElementById('category-name');
     var imageInput = document.getElementById('category-image');
     var imagePreview = document.getElementById('category-image-preview');
-    var fileDrop = document.getElementById('category-file-drop');
-    var fileDropText = document.getElementById('category-file-drop-text');
-    var fileDropDefaultText = fileDropText.textContent;
     var statusInput = document.getElementById('category-status');
     var priorityInput = document.getElementById('category-priority');
     var submitBtn = document.getElementById('category-form-submit');
@@ -79,8 +76,7 @@
         clearFormErrors();
         imagePreview.style.display = 'none';
         imagePreview.src = '';
-        fileDrop.classList.remove('has-file');
-        fileDropText.textContent = fileDropDefaultText;
+        imageInput.value = '';
         statusInput.value = '1';
         modalTitle.textContent = 'Add Category';
     }
@@ -124,8 +120,6 @@
         if (file) {
             imagePreview.src = URL.createObjectURL(file);
             imagePreview.style.display = 'block';
-            fileDrop.classList.add('has-file');
-            fileDropText.textContent = file.name;
         }
     });
 
@@ -155,8 +149,6 @@
                     if (category.image_url) {
                         imagePreview.src = category.image_url;
                         imagePreview.style.display = 'block';
-                        fileDrop.classList.add('has-file');
-                        fileDropText.textContent = 'Replace image';
                     }
                     openModal(categoryModal);
                 });

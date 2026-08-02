@@ -75,15 +75,9 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Logo</label>
-                <label for="logo" class="file-drop" id="logo-drop">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
-                    <span class="file-drop-text" id="logo-drop-text">
-                        {{ ! empty($settings['logo']) ? 'Replace logo' : 'Click to upload a logo' }}
-                    </span>
-                    <span class="file-drop-hint">PNG, JPG up to 2MB</span>
-                </label>
-                <input id="logo" type="file" name="logo" accept="image/*" class="file-drop-input">
+                <label for="logo" class="form-label">Logo</label>
+                <input id="logo" type="file" name="logo" accept="image/*" class="form-control">
+                <small style="color: var(--text-muted);">PNG, JPG up to 2MB</small>
                 @error('logo') <span class="field-error">{{ $message }}</span> @enderror
                 <img id="logo-preview" src="{{ ! empty($settings['logo']) ? asset('storage/'.$settings['logo']) : '' }}"
                      alt="" class="thumb-lg form-preview" style="{{ ! empty($settings['logo']) ? '' : 'display: none;' }}">

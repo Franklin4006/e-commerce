@@ -578,57 +578,6 @@ textarea.rte-source {
     height: 12px;
 }
 
-.file-drop-input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    overflow: hidden;
-}
-
-.file-drop {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    text-align: center;
-    padding: 1.5rem 1rem;
-    border: 1.5px dashed #d1d5db;
-    border-radius: var(--radius);
-    background: #f9fafb;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.file-drop:hover {
-    border-color: var(--color-primary);
-    background: var(--color-primary-soft);
-}
-
-.file-drop.has-file {
-    border-style: solid;
-    border-color: var(--color-primary);
-}
-
-.file-drop svg {
-    width: 24px;
-    height: 24px;
-    color: var(--color-primary);
-}
-
-.file-drop-text {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-}
-
-.file-drop-hint {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
 .color-row {
     display: flex;
     gap: 1rem;

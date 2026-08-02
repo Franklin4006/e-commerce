@@ -17,9 +17,6 @@
 
     var imageInput = document.getElementById('banner-image');
     var imagePreview = document.getElementById('banner-image-preview');
-    var fileDrop = document.getElementById('banner-file-drop');
-    var fileDropText = document.getElementById('banner-file-drop-text');
-    var fileDropDefaultText = fileDropText.textContent;
 
     var submitBtn = document.getElementById('banner-form-submit');
     var modalTitle = document.getElementById('banner-modal-title');
@@ -87,8 +84,7 @@
         clearFormErrors();
         imagePreview.style.display = 'none';
         imagePreview.src = '';
-        fileDrop.classList.remove('has-file');
-        fileDropText.textContent = fileDropDefaultText;
+        imageInput.value = '';
         statusInput.value = '1';
         buttonColorInput.value = '#4f46e5';
         modalTitle.textContent = 'Add Banner';
@@ -133,8 +129,6 @@
         if (file) {
             imagePreview.src = URL.createObjectURL(file);
             imagePreview.style.display = 'block';
-            fileDrop.classList.add('has-file');
-            fileDropText.textContent = file.name;
         }
     });
 
@@ -170,8 +164,6 @@
                     if (banner.image_url) {
                         imagePreview.src = banner.image_url;
                         imagePreview.style.display = 'block';
-                        fileDrop.classList.add('has-file');
-                        fileDropText.textContent = 'Replace image';
                     }
 
                     openModal(bannerModal);
