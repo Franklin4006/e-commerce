@@ -1,7 +1,9 @@
 <x-layouts.admin title="Customers">
     <div class="page-header">
         <h1 class="page-title">Customers</h1>
-        <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">Add Customer</a>
+        @can('content-write')
+            <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">Add Customer</a>
+        @endcan
     </div>
 
     @if (session('status'))

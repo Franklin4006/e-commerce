@@ -1,7 +1,9 @@
 <x-layouts.admin title="Orders">
     <div class="page-header">
         <h1 class="page-title">Orders</h1>
-        <a href="{{ route('admin.orders.create') }}" class="btn btn-primary">Create Order</a>
+        @can('content-write')
+            <a href="{{ route('admin.orders.create') }}" class="btn btn-primary">Create Order</a>
+        @endcan
     </div>
 
     <div class="card card-flush">

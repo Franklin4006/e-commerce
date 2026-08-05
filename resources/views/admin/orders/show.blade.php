@@ -139,24 +139,26 @@
             <p>Razorpay Payment ID: {{ $order->razorpay_payment_id }}</p>
         @endif
 
-        @if ($order->payment_method === 'cod')
-            <form method="POST" action="{{ route('admin.orders.payment-status.update', $order) }}" class="no-print" style="margin-top: 1rem;">
-                @csrf
-                @method('PUT')
+        @can('content-write')
+            @if ($order->payment_method === 'cod')
+                <form method="POST" action="{{ route('admin.orders.payment-status.update', $order) }}" class="no-print" style="margin-top: 1rem;">
+                    @csrf
+                    @method('PUT')
 
-                <div class="form-group">
-                    <label for="payment_status" class="form-label">Update Payment Status</label>
-                    <select id="payment_status" name="payment_status" class="form-control">
-                        @foreach (\App\Models\Order::PAYMENT_STATUSES as $paymentStatus)
-                            <option value="{{ $paymentStatus }}" @selected(old('payment_status', $order->payment_status) === $paymentStatus)>{{ ucfirst($paymentStatus) }}</option>
-                        @endforeach
-                    </select>
-                    <small style="color: var(--text-muted);">Cash on Delivery orders aren't marked paid automatically &mdash; update this once the payment is collected.</small>
-                </div>
+                    <div class="form-group">
+                        <label for="payment_status" class="form-label">Update Payment Status</label>
+                        <select id="payment_status" name="payment_status" class="form-control">
+                            @foreach (\App\Models\Order::PAYMENT_STATUSES as $paymentStatus)
+                                <option value="{{ $paymentStatus }}" @selected(old('payment_status', $order->payment_status) === $paymentStatus)>{{ ucfirst($paymentStatus) }}</option>
+                            @endforeach
+                        </select>
+                        <small style="color: var(--text-muted);">Cash on Delivery orders aren't marked paid automatically &mdash; update this once the payment is collected.</small>
+                    </div>
 
-                <button type="submit" class="btn btn-secondary">Update Payment Status</button>
-            </form>
-        @endif
+                    <button type="submit" class="btn btn-secondary">Update Payment Status</button>
+                </form>
+            @endif
+        @endcan
     </section>
 
     <div class="checkout-layout">

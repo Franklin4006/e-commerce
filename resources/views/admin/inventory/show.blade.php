@@ -51,6 +51,7 @@
         <section class="card">
             <h2 class="section-title">Adjust Stock</h2>
 
+            @can('content-write')
             <form method="POST" action="{{ route('admin.inventory.adjust', $product) }}">
                 @csrf
 
@@ -98,6 +99,9 @@
 
                 <button type="submit" class="btn btn-primary">Save Adjustment</button>
             </form>
+            @else
+                <p class="muted">You don't have permission to adjust stock.</p>
+            @endcan
         </section>
 
         <section class="card">

@@ -1,7 +1,9 @@
 <x-layouts.admin title="Banners">
     <div class="page-header">
         <h1 class="page-title">Banners</h1>
-        <button type="button" class="btn btn-primary" data-action="add-banner">Add Banner</button>
+        @can('content-write')
+            <button type="button" class="btn btn-primary" data-action="add-banner">Add Banner</button>
+        @endcan
     </div>
 
     <div id="banners-table">

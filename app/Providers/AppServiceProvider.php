@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Enums\AdminRole;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\Setting;
+use App\Models\User;
 use App\Support\Cart;
 use App\Support\Wishlist;
 use Illuminate\Auth\Middleware\Authenticate;
@@ -14,6 +16,7 @@ use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -58,6 +61,15 @@ class AppServiceProvider extends ServiceProvider
             $view->with('pendingReviewsCount', Review::where('status', 'pending')->count());
             $view->with('lowStockCount', Product::where('stock', '<=', $lowStockThreshold)->count());
         });
+
+        Gate::define('content-write', fn (User $user) => $user->is_admin
+            && in_array($user->role, [AdminRole::SuperAdmin, AdminRole::Admin], true));
+
+        Gate::define('content-delete', fn (User $user) => $user->is_admin
+            && $user->role === AdminRole::SuperAdmin);
+
+        Gate::define('super-admin', fn (User $user) => $user->is_admin
+            && $user->role === AdminRole::SuperAdmin);
 
         $this->configureMailFromSettings();
         $this->configureGoogleFromSettings();

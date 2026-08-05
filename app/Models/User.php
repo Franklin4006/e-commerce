@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AdminRole;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
@@ -30,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'password',
         'is_admin',
+        'role',
     ];
 
     /**
@@ -55,6 +57,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_otp_expires_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'role' => AdminRole::class,
         ];
     }
 

@@ -43,7 +43,9 @@
             </small>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Save</button>
+                @can('content-write')
+                    <button type="submit" class="btn btn-primary">Save</button>
+                @endcan
                 <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

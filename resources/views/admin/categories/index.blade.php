@@ -1,7 +1,9 @@
 <x-layouts.admin title="Categories">
     <div class="page-header">
         <h1 class="page-title">Categories</h1>
-        <button type="button" class="btn btn-primary" data-action="add-category">Add Category</button>
+        @can('content-write')
+            <button type="button" class="btn btn-primary" data-action="add-category">Add Category</button>
+        @endcan
     </div>
 
     <div id="categories-table">
