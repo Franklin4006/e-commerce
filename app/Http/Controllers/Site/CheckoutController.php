@@ -37,13 +37,18 @@ class CheckoutController extends Controller
 
         $coupon = Coupon::resolveApplied($request, Cart::total());
 
+        $previewAddress = $request->filled('shipping_address_id')
+            ? $addresses->firstWhere('id', (int) $request->query('shipping_address_id'))
+            : null;
+        $previewAddress ??= $addresses->first();
+
         $data = [
             'items' => $items,
             'addresses' => $addresses,
             'razorpayEnabled' => Razorpay::isConfigured(),
             'codEnabled' => Setting::get('cod_enabled', '1') !== '0',
             'siteSettings' => Setting::allSettings(),
-        ] + OrderTotals::forCart($coupon);
+        ] + OrderTotals::forCart($previewAddress, $coupon);
 
         return view('site.checkout.create', $data);
     }
@@ -90,7 +95,7 @@ class CheckoutController extends Controller
         }
 
         $coupon = Coupon::resolveApplied($request, Cart::total());
-        $totals = OrderTotals::forCart($coupon);
+        $totals = OrderTotals::forCart($shippingAddress, $coupon);
         $itemsData = OrderCreator::snapshotItems($items);
 
         if ($validated['payment_method'] === 'cod') {

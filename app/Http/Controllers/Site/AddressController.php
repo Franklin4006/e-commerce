@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Address;
+use App\Models\State;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AddressController extends Controller
@@ -19,7 +21,9 @@ class AddressController extends Controller
 
     public function create(): View
     {
-        return view('site.addresses.create');
+        $states = State::orderBy('name')->get();
+
+        return view('site.addresses.create', compact('states'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -45,7 +49,9 @@ class AddressController extends Controller
     {
         abort_if($address->user_id !== $request->user()->id, 403);
 
-        return view('site.addresses.edit', compact('address'));
+        $states = State::orderBy('name')->get();
+
+        return view('site.addresses.edit', compact('address', 'states'));
     }
 
     public function update(Request $request, Address $address): RedirectResponse
@@ -81,7 +87,7 @@ class AddressController extends Controller
             'address_line1' => ['required', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:255'],
-            'state' => ['required', 'string', 'max:255'],
+            'state' => ['required', 'string', Rule::exists('states', 'name')],
             'postal_code' => ['required', 'string', 'max:20'],
             'country' => ['required', 'string', 'max:255'],
             'is_default' => ['sometimes', 'boolean'],

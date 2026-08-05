@@ -31,7 +31,12 @@
 
     <div class="form-group">
         <label for="{{ $prefix }}_state" class="form-label">State</label>
-        <input id="{{ $prefix }}_state" type="text" name="{{ $prefix }}_state" class="form-control">
+        <select id="{{ $prefix }}_state" name="{{ $prefix }}_state" class="form-control">
+            <option value="">Select a state</option>
+            @foreach ($states as $stateOption)
+                <option value="{{ $stateOption->name }}">{{ $stateOption->name }}</option>
+            @endforeach
+        </select>
     </div>
 </div>
 

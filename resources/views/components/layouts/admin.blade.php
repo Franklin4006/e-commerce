@@ -60,6 +60,18 @@
                     Coupons
                 </a>
 
+                <div class="sidebar-nav-label">Shipping</div>
+                <a href="{{ route('admin.states.index') }}"
+                   class="sidebar-link {{ request()->routeIs('admin.states.*') ? 'active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    States
+                </a>
+                <a href="{{ route('admin.shipping-slabs.index') }}"
+                   class="sidebar-link {{ request()->routeIs('admin.shipping-slabs.*') ? 'active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    Order Value Charges
+                </a>
+
                 <div class="sidebar-nav-label">Catalog</div>
                 <a href="{{ route('admin.products.index') }}"
                    class="sidebar-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">

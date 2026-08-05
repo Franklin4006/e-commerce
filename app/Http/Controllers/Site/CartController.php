@@ -20,7 +20,8 @@ class CartController extends Controller
     {
         $items = Cart::contents();
         $coupon = Coupon::resolveApplied($request, Cart::total());
-        $data = ['items' => $items] + OrderTotals::forCart($coupon);
+        $shippingAddress = $request->user()?->addresses()->orderByDesc('is_default')->first();
+        $data = ['items' => $items] + OrderTotals::forCart($shippingAddress, $coupon);
 
         if ($request->ajax()) {
             return view('site.partials._cart-items', $data);

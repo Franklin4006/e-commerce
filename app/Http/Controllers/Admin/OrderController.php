@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductSize;
 use App\Models\Size;
+use App\Models\State;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Support\Invoice;
@@ -121,6 +122,7 @@ class OrderController extends Controller
     public function create(Request $request): View
     {
         $customer = null;
+        $states = State::orderBy('name')->get();
 
         if ($request->filled('customer_id')) {
             $customer = User::where('is_admin', false)->find($request->input('customer_id'));
@@ -129,13 +131,13 @@ class OrderController extends Controller
         if (! $customer) {
             $customers = User::where('is_admin', false)->orderBy('name')->get();
 
-            return view('admin.orders.create', ['customer' => null, 'customers' => $customers, 'products' => collect()]);
+            return view('admin.orders.create', ['customer' => null, 'customers' => $customers, 'products' => collect(), 'states' => $states]);
         }
 
         $customer->load(['addresses' => fn ($query) => $query->orderByDesc('is_default')]);
         $products = Product::with('colors')->where('status', true)->orderBy('name')->get();
 
-        return view('admin.orders.create', ['customer' => $customer, 'customers' => collect(), 'products' => $products]);
+        return view('admin.orders.create', ['customer' => $customer, 'customers' => collect(), 'products' => $products, 'states' => $states]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -159,7 +161,7 @@ class OrderController extends Controller
             'new_shipping_address_line1' => ['required_without:shipping_address_id', 'nullable', 'string', 'max:255'],
             'new_shipping_address_line2' => ['nullable', 'string', 'max:255'],
             'new_shipping_city' => ['required_without:shipping_address_id', 'nullable', 'string', 'max:255'],
-            'new_shipping_state' => ['required_without:shipping_address_id', 'nullable', 'string', 'max:255'],
+            'new_shipping_state' => ['required_without:shipping_address_id', 'nullable', 'string', Rule::exists('states', 'name')],
             'new_shipping_postal_code' => ['required_without:shipping_address_id', 'nullable', 'string', 'max:20'],
             'new_shipping_country' => ['required_without:shipping_address_id', 'nullable', 'string', 'max:255'],
         ]);
@@ -200,7 +202,7 @@ class OrderController extends Controller
                 'new_billing_address_line1' => ['required', 'string', 'max:255'],
                 'new_billing_address_line2' => ['nullable', 'string', 'max:255'],
                 'new_billing_city' => ['required', 'string', 'max:255'],
-                'new_billing_state' => ['required', 'string', 'max:255'],
+                'new_billing_state' => ['required', 'string', Rule::exists('states', 'name')],
                 'new_billing_postal_code' => ['required', 'string', 'max:20'],
                 'new_billing_country' => ['required', 'string', 'max:255'],
             ]);
@@ -228,7 +230,7 @@ class OrderController extends Controller
 
         try {
             $itemsData = OrderCreator::snapshotItemsFromInput($pairs);
-            $totals = OrderTotals::forItems($itemsData);
+            $totals = OrderTotals::forItems($itemsData, $shippingAddress);
             $paymentStatus = $validated['payment_method'] === 'manual' ? 'paid' : 'pending';
 
             $order = OrderCreator::create($customer, $itemsData, $shippingAddress, $billingAddress, $totals, $validated['payment_method'], $paymentStatus);

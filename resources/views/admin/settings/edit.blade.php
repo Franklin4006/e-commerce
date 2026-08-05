@@ -5,7 +5,7 @@
             'pages' => ['about_us_title', 'about_us_content', 'terms_title', 'terms_content', 'privacy_title', 'privacy_content'],
             'contact' => ['email', 'phone', 'address', 'whatsapp_number', 'social_facebook', 'social_instagram', 'social_twitter', 'social_youtube'],
             'mail' => ['mail_mailer', 'mail_host', 'mail_port', 'mail_username', 'mail_password', 'mail_encryption', 'mail_from_address', 'mail_from_name'],
-            'commerce' => ['shipping_charge', 'gst_percentage', 'low_stock_threshold', 'cod_enabled'],
+            'commerce' => ['gst_percentage', 'low_stock_threshold', 'cod_enabled'],
             'payments' => ['razorpay_mode', 'razorpay_test_key_id', 'razorpay_test_key_secret', 'razorpay_live_key_id', 'razorpay_live_key_secret'],
             'social-login' => ['google_client_id', 'google_client_secret'],
         ];
@@ -311,17 +311,6 @@
             </div>
             @error('cod_enabled') <span class="field-error">{{ $message }}</span> @enderror
             <small style="color: var(--text-muted);">When disabled, customers won't see Cash on Delivery as a payment option at checkout.</small>
-        </section>
-
-        <section class="card">
-            <h2 class="section-title">Shipping</h2>
-
-            <div class="form-group">
-                <label for="shipping_charge" class="form-label">Shipping Charge (₹)</label>
-                <input id="shipping_charge" type="number" name="shipping_charge" value="{{ old('shipping_charge', $settings['shipping_charge'] ?? '') }}" min="0" step="0.01" class="form-control">
-                @error('shipping_charge') <span class="field-error">{{ $message }}</span> @enderror
-                <small style="color: var(--text-muted);">Leave blank or 0 for free shipping. Shown to customers on the cart page.</small>
-            </div>
         </section>
 
         <section class="card">

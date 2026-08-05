@@ -44,7 +44,6 @@ class SettingController extends Controller
             'mail_encryption' => ['nullable', 'in:tls,ssl,'],
             'mail_from_address' => ['nullable', 'email', 'max:255'],
             'mail_from_name' => ['nullable', 'string', 'max:255'],
-            'shipping_charge' => ['nullable', 'numeric', 'min:0'],
             'cod_enabled' => ['nullable', 'boolean'],
             'razorpay_mode' => ['nullable', 'in:test,live'],
             'razorpay_test_key_id' => ['nullable', 'string', 'max:255'],

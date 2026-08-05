@@ -27,7 +27,7 @@
                                 'address' => $address,
                                 'groupName' => 'shipping_address_id',
                                 'idPrefix' => 'shipping',
-                                'checked' => $loop->first,
+                                'checked' => $address->id === (int) request('shipping_address_id', $addresses->first()->id),
                             ])
                         @endforeach
                     </div>

@@ -39,7 +39,12 @@
 
     <div class="form-group">
         <label for="state" class="form-label">State</label>
-        <input id="state" type="text" name="state" value="{{ old('state', $address->state ?? '') }}" required class="form-control">
+        <select id="state" name="state" required class="form-control">
+            <option value="">Select a state</option>
+            @foreach ($states as $stateOption)
+                <option value="{{ $stateOption->name }}" {{ old('state', $address->state ?? '') === $stateOption->name ? 'selected' : '' }}>{{ $stateOption->name }}</option>
+            @endforeach
+        </select>
     </div>
 </div>
 

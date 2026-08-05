@@ -34,18 +34,16 @@
         <p class="coupon-error" id="coupon-error" style="display: none;"></p>
     @endif
 
-    @if ($shippingCharge !== null)
-        <div class="order-summary-row">
-            <span>Shipping Charge</span>
-            <span>
-                @if ($shippingCharge > 0)
-                    ₹{{ number_format($shippingCharge, 2) }}
-                @else
-                    <span class="badge badge-success">FREE</span>
-                @endif
-            </span>
-        </div>
-    @endif
+    <div class="order-summary-row">
+        <span>Shipping Charge</span>
+        <span>
+            @if ($shippingCharge > 0)
+                ₹{{ number_format($shippingCharge, 2) }}
+            @else
+                <span class="badge badge-success">FREE</span>
+            @endif
+        </span>
+    </div>
 
     <div class="order-summary-row order-summary-grand-total">
         <span>Total Amount</span>

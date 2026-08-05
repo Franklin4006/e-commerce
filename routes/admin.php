@@ -15,7 +15,9 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\ShippingSlabController;
 use App\Http\Controllers\Admin\SizeController;
+use App\Http\Controllers\Admin\StateController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -108,6 +110,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/coupons/{coupon}/edit', [CouponController::class, 'edit'])->name('coupons.edit');
         Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('coupons.update');
         Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->name('coupons.destroy');
+
+        Route::get('/states', [StateController::class, 'index'])->name('states.index');
+        Route::get('/states/create', [StateController::class, 'create'])->name('states.create');
+        Route::post('/states', [StateController::class, 'store'])->name('states.store');
+        Route::get('/states/{state}/edit', [StateController::class, 'edit'])->name('states.edit');
+        Route::put('/states/{state}', [StateController::class, 'update'])->name('states.update');
+        Route::delete('/states/{state}', [StateController::class, 'destroy'])->name('states.destroy');
+
+        Route::get('/shipping-slabs', [ShippingSlabController::class, 'index'])->name('shipping-slabs.index');
+        Route::get('/shipping-slabs/create', [ShippingSlabController::class, 'create'])->name('shipping-slabs.create');
+        Route::post('/shipping-slabs', [ShippingSlabController::class, 'store'])->name('shipping-slabs.store');
+        Route::get('/shipping-slabs/{shippingSlab}/edit', [ShippingSlabController::class, 'edit'])->name('shipping-slabs.edit');
+        Route::put('/shipping-slabs/{shippingSlab}', [ShippingSlabController::class, 'update'])->name('shipping-slabs.update');
+        Route::delete('/shipping-slabs/{shippingSlab}', [ShippingSlabController::class, 'destroy'])->name('shipping-slabs.destroy');
 
         Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
         Route::put('/reviews/{review}/status', [ReviewController::class, 'updateStatus'])->name('reviews.status.update');
