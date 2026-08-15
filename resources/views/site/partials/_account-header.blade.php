@@ -4,7 +4,7 @@
     <div class="profile-hero-body">
         <div class="profile-avatar-wrap">
             @if ($user->avatar)
-                <img src="{{ asset('storage/'.$user->avatar) }}" alt="{{ $user->name }}" class="profile-avatar">
+                <img src="{{ asset('uploads/'.$user->avatar) }}" alt="{{ $user->name }}" class="profile-avatar">
             @else
                 <span class="profile-avatar">{{ Str::of($user->name)->substr(0, 1)->upper() }}</span>
             @endif

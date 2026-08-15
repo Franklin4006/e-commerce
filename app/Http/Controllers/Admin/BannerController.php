@@ -35,7 +35,7 @@ class BannerController extends Controller
             'button_color' => $banner->button_color,
             'status' => $banner->status,
             'priority' => $banner->priority,
-            'image_url' => $banner->image ? asset('storage/'.$banner->image) : null,
+            'image_url' => $banner->image ? asset('uploads/'.$banner->image) : null,
         ]);
     }
 

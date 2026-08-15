@@ -79,7 +79,7 @@
                 <input id="logo" type="file" name="logo" accept="image/*" class="form-control">
                 <small style="color: var(--text-muted);">PNG, JPG up to 2MB</small>
                 @error('logo') <span class="field-error">{{ $message }}</span> @enderror
-                <img id="logo-preview" src="{{ ! empty($settings['logo']) ? asset('storage/'.$settings['logo']) : '' }}"
+                <img id="logo-preview" src="{{ ! empty($settings['logo']) ? asset('uploads/'.$settings['logo']) : '' }}"
                      alt="" class="thumb-lg form-preview" style="{{ ! empty($settings['logo']) ? '' : 'display: none;' }}">
             </div>
         </section>

@@ -23,7 +23,7 @@
         <div class="pdp-gallery">
             @if ($product->thumbnail)
                 <div class="pdp-thumbs" id="pdp-thumbs">
-                    <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}"
+                    <img src="{{ asset('uploads/' . $product->thumbnail) }}" alt="{{ $product->name }}"
                         class="pdp-thumb active" onmouseover="document.getElementById('main-image').src = this.src"
                         onclick="document.getElementById('main-image').src = this.src">
                 </div>
@@ -40,7 +40,7 @@
                 </button>
 
                 @if ($product->thumbnail)
-                    <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}"
+                    <img src="{{ asset('uploads/' . $product->thumbnail) }}" alt="{{ $product->name }}"
                         class="pdp-main-image" id="main-image">
                 @else
                     <div class="pdp-main-image"></div>
@@ -169,7 +169,7 @@
                 <a href="https://twitter.com/intent/tweet?url={{ urlencode($shareUrl) }}&text={{ urlencode($shareText) }}" target="_blank" rel="noopener" aria-label="Share on Twitter" title="Share on Twitter">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.77.35-1.6.58-2.46.68a4.3 4.3 0 0 0 1.88-2.37 8.6 8.6 0 0 1-2.72 1.04 4.28 4.28 0 0 0-7.29 3.9A12.14 12.14 0 0 1 2.9 4.9a4.28 4.28 0 0 0 1.32 5.71c-.7-.02-1.36-.22-1.94-.53v.05a4.28 4.28 0 0 0 3.43 4.2c-.65.18-1.34.2-1.99.08a4.29 4.29 0 0 0 4 2.98A8.6 8.6 0 0 1 1 19.08a12.1 12.1 0 0 0 6.56 1.92c7.88 0 12.2-6.53 12.2-12.2 0-.19 0-.37-.01-.56A8.7 8.7 0 0 0 22 5.9z"/></svg>
                 </a>
-                <a href="https://pinterest.com/pin/create/button/?url={{ urlencode($shareUrl) }}&media={{ urlencode($product->thumbnail ? asset('storage/'.$product->thumbnail) : '') }}&description={{ urlencode($shareText) }}" target="_blank" rel="noopener" aria-label="Share on Pinterest" title="Share on Pinterest">
+                <a href="https://pinterest.com/pin/create/button/?url={{ urlencode($shareUrl) }}&media={{ urlencode($product->thumbnail ? asset('uploads/'.$product->thumbnail) : '') }}&description={{ urlencode($shareText) }}" target="_blank" rel="noopener" aria-label="Share on Pinterest" title="Share on Pinterest">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.86 6.35 9.33-.09-.79-.17-2.01.03-2.88.18-.78 1.17-4.97 1.17-4.97s-.3-.6-.3-1.48c0-1.39.8-2.43 1.81-2.43.85 0 1.26.64 1.26 1.4 0 .85-.55 2.13-.83 3.31-.24 1 .5 1.81 1.48 1.81 1.78 0 3.15-1.88 3.15-4.58 0-2.4-1.72-4.07-4.18-4.07-2.85 0-4.52 2.14-4.52 4.35 0 .86.33 1.79.75 2.29a.3.3 0 0 1 .07.29c-.08.32-.25 1-.28 1.15-.05.19-.15.24-.35.14-1.3-.6-2.11-2.5-2.11-4.02 0-3.27 2.38-6.28 6.85-6.28 3.6 0 6.4 2.56 6.4 5.99 0 3.57-2.25 6.45-5.38 6.45-1.05 0-2.04-.55-2.38-1.19l-.65 2.46c-.24.9-.87 2.04-1.3 2.73.98.3 2.02.47 3.1.47 5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
                 </a>
             </div>

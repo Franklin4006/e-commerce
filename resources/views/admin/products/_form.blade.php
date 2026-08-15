@@ -125,7 +125,7 @@
                         <div class="gallery-grid color-existing-images">
                             @foreach ($color['images'] ?? [] as $img)
                                 <div class="gallery-item">
-                                    <img src="{{ asset('storage/'.$img['path']) }}" alt="">
+                                    <img src="{{ asset('uploads/'.$img['path']) }}" alt="">
                                     <button type="button" class="gallery-item-remove"
                                             data-url="{{ route('admin.products.color-images.destroy', [$product, $img['id']]) }}">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
@@ -216,7 +216,7 @@
     <input id="thumbnail" type="file" name="thumbnail" accept="image/*" class="form-control">
     <small style="color: var(--text-muted);">PNG, JPG up to 2MB</small>
     @error('thumbnail') <span class="field-error">{{ $message }}</span> @enderror
-    <img id="thumbnail-preview" src="{{ isset($product) && $product->thumbnail ? asset('storage/'.$product->thumbnail) : '' }}"
+    <img id="thumbnail-preview" src="{{ isset($product) && $product->thumbnail ? asset('uploads/'.$product->thumbnail) : '' }}"
          alt="" class="thumb-lg form-preview" style="{{ isset($product) && $product->thumbnail ? '' : 'display: none;' }}">
 </div>
 

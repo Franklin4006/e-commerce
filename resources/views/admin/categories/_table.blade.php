@@ -14,7 +14,7 @@
                 <tr>
                     <td>
                         @if ($category->image)
-                            <img src="{{ asset('storage/'.$category->image) }}" alt="{{ $category->name }}" class="thumb">
+                            <img src="{{ asset('uploads/'.$category->image) }}" alt="{{ $category->name }}" class="thumb">
                         @else
                             <span class="thumb-placeholder">N/A</span>
                         @endif

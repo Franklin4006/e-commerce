@@ -15,7 +15,7 @@
                 <tr>
                     <td>
                         @if ($banner->image)
-                            <img src="{{ asset('storage/'.$banner->image) }}" alt="{{ $banner->title }}" class="thumb">
+                            <img src="{{ asset('uploads/'.$banner->image) }}" alt="{{ $banner->title }}" class="thumb">
                         @else
                             <span class="thumb-placeholder">N/A</span>
                         @endif

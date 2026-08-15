@@ -12,7 +12,7 @@
 <div class="quick-view-layout">
     <div class="quick-view-image-wrap">
         @if ($product->thumbnail)
-            <img src="{{ asset('storage/'.$product->thumbnail) }}" alt="{{ $product->name }}" class="quick-view-image">
+            <img src="{{ asset('uploads/'.$product->thumbnail) }}" alt="{{ $product->name }}" class="quick-view-image">
         @else
             <div class="quick-view-image"></div>
         @endif

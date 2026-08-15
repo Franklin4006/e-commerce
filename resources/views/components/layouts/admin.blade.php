@@ -14,7 +14,7 @@
         <aside class="sidebar" id="sidebar">
             <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
                 @if (! empty($siteSettings['logo']))
-                    <img src="{{ asset('storage/'.$siteSettings['logo']) }}" alt="" class="sidebar-brand-logo">
+                    <img src="{{ asset('uploads/'.$siteSettings['logo']) }}" alt="" class="sidebar-brand-logo">
                 @else
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9z"/><path d="M9 13a3 3 0 0 0 6 0"/></svg>
                 @endif
@@ -23,7 +23,7 @@
 
             <a href="{{ route('admin.profile.edit') }}" class="sidebar-user {{ request()->routeIs('admin.profile.*') ? 'active' : '' }}">
                 @if (auth()->user()->avatar)
-                    <img src="{{ asset('storage/'.auth()->user()->avatar) }}" alt="" class="sidebar-user-avatar">
+                    <img src="{{ asset('uploads/'.auth()->user()->avatar) }}" alt="" class="sidebar-user-avatar">
                 @else
                     <span class="sidebar-user-avatar">{{ Str::of(auth()->user()->name)->substr(0, 1)->upper() }}</span>
                 @endif

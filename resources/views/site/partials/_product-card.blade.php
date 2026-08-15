@@ -2,7 +2,7 @@
     <div class="product-card-image-wrap">
         <a href="{{ route('product.show', $product) }}" class="product-card-link">
             @if ($product->thumbnail)
-                <img src="{{ asset('storage/'.$product->thumbnail) }}" alt="{{ $product->name }}" class="product-card-image">
+                <img src="{{ asset('uploads/'.$product->thumbnail) }}" alt="{{ $product->name }}" class="product-card-image">
             @else
                 <div class="product-card-image"></div>
             @endif

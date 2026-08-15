@@ -19,7 +19,7 @@
                 <tr>
                     <td>
                         @if ($product->thumbnail)
-                            <img src="{{ asset('storage/'.$product->thumbnail) }}" alt="{{ $product->name }}" class="thumb">
+                            <img src="{{ asset('uploads/'.$product->thumbnail) }}" alt="{{ $product->name }}" class="thumb">
                         @else
                             <span class="thumb-placeholder">N/A</span>
                         @endif

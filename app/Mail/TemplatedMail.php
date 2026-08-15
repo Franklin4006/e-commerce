@@ -43,7 +43,7 @@ class TemplatedMail extends Mailable
             'slot' => $this->renderedBody,
             'preheader' => Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($this->renderedBody))), 100),
             'siteName' => $settings['site_name'] ?? config('app.name'),
-            'logoUrl' => ! empty($settings['logo']) ? asset('storage/'.$settings['logo']) : null,
+            'logoUrl' => ! empty($settings['logo']) ? asset('uploads/'.$settings['logo']) : null,
             'primaryColor' => $settings['primary_color'] ?? '#4f46e5',
             'address' => $settings['address'] ?? null,
             'phone' => $settings['phone'] ?? null,

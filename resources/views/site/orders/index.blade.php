@@ -61,7 +61,7 @@
                                         @php $product = $item->product; @endphp
                                         <a class="order-card-item" href="{{ $product ? route('product.show', $product) : route('orders.show', $order) }}">
                                             @if ($product && $product->thumbnail)
-                                                <img src="{{ asset('storage/'.$product->thumbnail) }}" alt="{{ $item->product_name }}" class="order-card-item-img">
+                                                <img src="{{ asset('uploads/'.$product->thumbnail) }}" alt="{{ $item->product_name }}" class="order-card-item-img">
                                             @else
                                                 <span class="order-card-item-img order-card-item-img--empty">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>

@@ -102,7 +102,7 @@
 
             <a href="{{ route('home') }}" class="site-brand">
                 @if (! empty($siteSettings['logo']))
-                    <img src="{{ asset('storage/'.$siteSettings['logo']) }}" alt="{{ $siteName }}" class="site-logo">
+                    <img src="{{ asset('uploads/'.$siteSettings['logo']) }}" alt="{{ $siteName }}" class="site-logo">
                 @else
                     <span class="site-brand-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3V6a4 4 0 0 0-8 0v1H6a1 1 0 0 0-1 .93L4 21h16l-1-13.07A1 1 0 0 0 20 7zM10 6a2 2 0 0 1 4 0v1h-4z"/></svg>

@@ -31,7 +31,7 @@ class CategoryController extends Controller
             'name' => $category->name,
             'status' => $category->status,
             'priority' => $category->priority,
-            'image_url' => $category->image ? asset('storage/'.$category->image) : null,
+            'image_url' => $category->image ? asset('uploads/'.$category->image) : null,
         ]);
     }
 

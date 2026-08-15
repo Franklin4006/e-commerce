@@ -12,7 +12,7 @@
                     @foreach ($items as $item)
                         <div class="cart-row">
                             @if ($item['product']->thumbnail)
-                                <img src="{{ asset('storage/'.$item['product']->thumbnail) }}" alt="{{ $item['product']->name }}" class="cart-row-image">
+                                <img src="{{ asset('uploads/'.$item['product']->thumbnail) }}" alt="{{ $item['product']->name }}" class="cart-row-image">
                             @else
                                 <div class="cart-row-image"></div>
                             @endif

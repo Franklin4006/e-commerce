@@ -3,7 +3,7 @@
         <div class="hero-slider" id="hero-slider">
             @foreach ($banners as $banner)
                 <div class="hero-slide {{ $loop->first ? 'active' : '' }}">
-                    <img src="{{ asset('storage/'.$banner->image) }}" alt="{{ $banner->title }}" class="hero-slide-image">
+                    <img src="{{ asset('uploads/'.$banner->image) }}" alt="{{ $banner->title }}" class="hero-slide-image">
                     <div class="hero-slide-content position-{{ $banner->title_position }}">
                         <h2 class="hero-slide-title">{{ $banner->title }}</h2>
                         @if ($banner->sub_title)
@@ -106,7 +106,7 @@
                 @foreach ($categories as $category)
                     <a href="{{ route('category.show', $category) }}" class="category-tile" data-aos="zoom-in" data-aos-delay="{{ $loop->index * 70 }}">
                         @if ($category->image)
-                            <img src="{{ asset('storage/'.$category->image) }}" alt="{{ $category->name }}">
+                            <img src="{{ asset('uploads/'.$category->image) }}" alt="{{ $category->name }}">
                         @endif
                         <span class="category-tile-overlay">
                             <span class="category-name">{{ $category->name }}</span>

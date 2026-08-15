@@ -6,7 +6,7 @@
         <div class="color-selector-options">
             @foreach ($product->colors as $color)
                 @php
-                    $galleryUrls = $color->images->map(fn ($img) => asset('storage/'.$img->image));
+                    $galleryUrls = $color->images->map(fn ($img) => asset('uploads/'.$img->image));
                     $coverUrl = $galleryUrls->first();
                 @endphp
                 <button type="button" class="color-option" data-color-id="{{ $color->id }}" data-color-name="{{ $color->name }}"

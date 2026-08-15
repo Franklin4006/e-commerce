@@ -29,7 +29,7 @@
         <tr>
             <td>
                 @if (! empty($siteSettings['logo']))
-                    <img src="{{ public_path('storage/'.$siteSettings['logo']) }}" alt="{{ $siteSettings['site_name'] ?? config('app.name') }}" style="max-height: 50px; margin-bottom: 8px;"><br>
+                    <img src="{{ public_path('uploads/'.$siteSettings['logo']) }}" alt="{{ $siteSettings['site_name'] ?? config('app.name') }}" style="max-height: 50px; margin-bottom: 8px;"><br>
                 @else
                     <p class="company-name">{{ $siteSettings['site_name'] ?? config('app.name') }}</p>
                 @endif
