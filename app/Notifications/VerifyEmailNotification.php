@@ -3,11 +3,15 @@
 namespace App\Notifications;
 
 use App\Mail\TemplatedMail;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
 
-class VerifyEmailNotification extends Notification
+class VerifyEmailNotification extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     public function via(object $notifiable): array
     {
         return ['mail'];

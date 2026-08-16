@@ -44,7 +44,7 @@ class ContactController extends Controller
 
         $recipient = Setting::get('email') ?: config('mail.from.address');
 
-        Mail::to($recipient)->send(new TemplatedMail('contact-inquiry', $validated));
+        Mail::to($recipient)->queue(new TemplatedMail('contact-inquiry', $validated));
 
         return back()->with('status', 'Thanks for reaching out! We\'ll get back to you soon.');
     }
