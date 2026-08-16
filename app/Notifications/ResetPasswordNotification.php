@@ -3,15 +3,11 @@
 namespace App\Notifications;
 
 use App\Mail\TemplatedMail;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
 
-class ResetPasswordNotification extends Notification implements ShouldQueue
+class ResetPasswordNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(private readonly string $token)
     {
     }

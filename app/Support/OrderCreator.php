@@ -182,7 +182,7 @@ class OrderCreator
 
     public static function sendConfirmationEmail(User $user, Order $order): void
     {
-        Mail::to($user->email)->queue(new TemplatedMail('order-confirmation', [
+        Mail::to($user->email)->send(new TemplatedMail('order-confirmation', [
             'name' => $user->name,
             'order_number' => $order->order_number,
             'grand_total' => number_format((float) $order->grand_total, 2),
@@ -194,7 +194,7 @@ class OrderCreator
     {
         $order->loadMissing('user');
 
-        Mail::to($order->user->email)->queue(new TemplatedMail('order-status-update', [
+        Mail::to($order->user->email)->send(new TemplatedMail('order-status-update', [
             'name' => $order->user->name,
             'order_number' => $order->order_number,
             'status' => ucfirst($order->status),

@@ -5,14 +5,13 @@ namespace App\Mail;
 use App\Models\EmailTemplate;
 use App\Models\Setting;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
 
-class TemplatedMail extends Mailable implements ShouldQueue
+class TemplatedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
