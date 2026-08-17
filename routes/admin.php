@@ -105,6 +105,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
         Route::get('/inventory/{product}', [InventoryController::class, 'show'])->name('inventory.show');
+        Route::get('/inventory/{product}/history', [InventoryController::class, 'history'])->name('inventory.history');
         Route::post('/inventory/{product}/adjust', [InventoryController::class, 'adjust'])->name('inventory.adjust')->middleware('can:content-write');
 
         Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');

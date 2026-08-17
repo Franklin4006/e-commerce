@@ -34,22 +34,29 @@ class InventoryController extends Controller
 
     public function show(Product $product): View
     {
-        $product->load('stockMovements.changedBy', 'stockMovements.order', 'stockMovements.color', 'sizes', 'colors.sizes');
+        $product->load('sizes', 'colors.sizes');
 
         return view('admin.inventory.show', compact('product'));
+    }
+
+    public function history(Product $product): View
+    {
+        $product->load('stockMovements.changedBy', 'stockMovements.order', 'stockMovements.color');
+
+        return view('admin.inventory.history', compact('product'));
     }
 
     public function adjust(Request $request, Product $product): RedirectResponse
     {
         $validated = $request->validate([
             'size' => ['required', Rule::in(Size::names())],
-            'color_id' => ['nullable', 'integer', Rule::exists('product_colors', 'id')->where('product_id', $product->id)],
+            'color_id' => ['required', 'integer', Rule::exists('product_colors', 'id')->where('product_id', $product->id)],
             'direction' => ['required', 'in:add,remove'],
             'quantity' => ['required', 'integer', 'min:1'],
             'note' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $colorId = $request->filled('color_id') ? (int) $validated['color_id'] : null;
+        $colorId = (int) $validated['color_id'];
 
         DB::transaction(function () use ($request, $product, $validated, $colorId) {
             $locked = ProductSize::where('product_id', $product->id)

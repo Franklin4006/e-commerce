@@ -67,7 +67,6 @@ class ProductController extends Controller
 
         $this->syncRelatedProducts($request, $product);
         $this->syncSpecifications($request, $product);
-        $this->syncSizes($request, $product);
         $this->syncColors($request, $product);
 
         return redirect()->route('admin.products.index')->with('status', 'Product created successfully.');
@@ -89,7 +88,6 @@ class ProductController extends Controller
 
         $this->syncRelatedProducts($request, $product);
         $this->syncSpecifications($request, $product);
-        $this->syncSizes($request, $product);
         $this->syncColors($request, $product);
 
         return redirect()->route('admin.products.index')->with('status', 'Product updated successfully.');
@@ -153,18 +151,6 @@ class ProductController extends Controller
                 'value' => $value,
                 'sort_order' => $sortOrder++,
             ]);
-        }
-    }
-
-    private function syncSizes(Request $request, Product $product): void
-    {
-        $sizes = $request->input('sizes', []);
-
-        foreach (Size::names() as $size) {
-            ProductSize::updateOrCreate(
-                ['product_id' => $product->id, 'product_color_id' => null, 'size' => $size],
-                ['stock' => (int) ($sizes[$size] ?? 0)]
-            );
         }
     }
 
@@ -251,22 +237,21 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:255', Rule::unique('products')->ignore($product)],
             'category_id' => ['required', 'exists:categories,id'],
             'description' => ['nullable', 'string'],
-            'mrp' => ['required', 'numeric', 'min:0'],
-            'sale_price' => ['required', 'numeric', 'min:0', 'lte:mrp'],
-            'sizes' => ['required', 'array'],
-            'colors' => ['nullable', 'array'],
+            'mrp' => ['required', 'numeric', 'min:0.01'],
+            'sale_price' => ['required', 'numeric', 'min:0.01', 'lte:mrp'],
+            'colors' => ['required', 'array', 'min:1'],
             'colors.*.id' => ['nullable', 'integer'],
-            'colors.*.color_id' => ['nullable', 'integer', 'exists:colors,id'],
+            'colors.*.color_id' => ['required', 'integer', 'exists:colors,id', 'distinct'],
             'colors.*.images' => ['nullable', 'array'],
             'colors.*.images.*' => ['image', 'max:2048'],
             'colors.*.sizes' => ['nullable', 'array'],
-            'thumbnail' => ['nullable', 'image', 'max:2048'],
+            'thumbnail' => [$product ? 'nullable' : 'required', 'image', 'max:2048'],
             'related_products' => ['nullable', 'array'],
             'related_products.*' => ['integer', 'exists:products,id'],
             'specification_keys' => ['nullable', 'array'],
-            'specification_keys.*' => ['nullable', 'string', 'max:100'],
+            'specification_keys.*' => ['nullable', 'string', 'max:100', 'required_with:specification_values.*'],
             'specification_values' => ['nullable', 'array'],
-            'specification_values.*' => ['nullable', 'string', 'max:255'],
+            'specification_values.*' => ['nullable', 'string', 'max:255', 'required_with:specification_keys.*'],
             'status' => ['sometimes', 'boolean'],
             'priority' => ['nullable', 'integer', 'min:0'],
         ];
@@ -274,13 +259,27 @@ class ProductController extends Controller
         // Sizes are an admin-managed list (see SizeController), not a fixed
         // set, so the per-size stock inputs are validated dynamically.
         foreach (Size::names() as $sizeName) {
-            $rules["sizes.{$sizeName}"] = ['nullable', 'integer', 'min:0'];
             $rules["colors.*.sizes.{$sizeName}"] = ['nullable', 'integer', 'min:0'];
         }
 
-        $validated = $request->validate($rules) + ['status' => $request->boolean('status')];
+        $messages = [
+            'colors.required' => 'Add at least one color with its stock by size.',
+            'colors.*.color_id.required' => 'Select a color for each row.',
+            'colors.*.color_id.distinct' => 'This color has already been added — remove the duplicate row.',
+            'colors.*.images.*.image' => 'Each photo must be a valid image file.',
+            'thumbnail.required' => 'A thumbnail image is required.',
+            'specification_keys.*.required_with' => 'Enter a key for every specification value.',
+            'specification_values.*.required_with' => 'Enter a value for every specification key.',
+        ];
 
-        unset($validated['sizes'], $validated['colors']);
+        $attributes = [
+            'category_id' => 'category',
+            'mrp' => 'MRP',
+        ];
+
+        $validated = $request->validate($rules, $messages, $attributes) + ['status' => $request->boolean('status')];
+
+        unset($validated['colors']);
 
         return $validated;
     }

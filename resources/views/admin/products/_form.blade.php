@@ -32,13 +32,13 @@
 <div class="form-row">
     <div class="form-group">
         <label for="mrp" class="form-label">MRP (₹)</label>
-        <input id="mrp" type="number" name="mrp" value="{{ old('mrp', $product->mrp ?? 0) }}" min="0" step="0.01" required class="form-control">
+        <input id="mrp" type="number" name="mrp" value="{{ old('mrp', $product->mrp ?? '') }}" min="0.01" step="0.01" required class="form-control">
         @error('mrp') <span class="field-error">{{ $message }}</span> @enderror
     </div>
 
     <div class="form-group">
         <label for="sale_price" class="form-label">Sale Price (₹)</label>
-        <input id="sale_price" type="number" name="sale_price" value="{{ old('sale_price', $product->sale_price ?? 0) }}" min="0" step="0.01" required class="form-control">
+        <input id="sale_price" type="number" name="sale_price" value="{{ old('sale_price', $product->sale_price ?? '') }}" min="0.01" step="0.01" required class="form-control">
         @error('sale_price') <span class="field-error">{{ $message }}</span> @enderror
         <small style="color: var(--text-muted);">Must not exceed MRP.</small>
     </div>
@@ -46,28 +46,7 @@
 
 @php
     $sizeNames = \App\Models\Size::names();
-    $colorlessSizes = isset($product) ? $product->sizes->where('product_color_id', null) : collect();
 @endphp
-<div class="form-group">
-    <label class="form-label">
-        Stock by Size
-        <a href="{{ route('admin.sizes.index') }}" target="_blank" style="font-weight: 400; font-size: 0.8rem;">Manage sizes</a>
-    </label>
-    <small style="display: block; color: var(--text-muted); margin-bottom: 0.5rem;">
-        Used only if this product has no colors below. Once you add colors, stock is tracked per color instead.
-    </small>
-    <div class="form-row">
-        @foreach ($sizeNames as $sizeOption)
-            <div class="form-group">
-                <label for="sizes_{{ $sizeOption }}" class="form-label">{{ $sizeOption }}</label>
-                <input id="sizes_{{ $sizeOption }}" type="number" name="sizes[{{ $sizeOption }}]"
-                    value="{{ old('sizes.'.$sizeOption, $colorlessSizes->firstWhere('size', $sizeOption)->stock ?? 0) }}"
-                    min="0" required class="form-control">
-                @error('sizes.'.$sizeOption) <span class="field-error">{{ $message }}</span> @enderror
-            </div>
-        @endforeach
-    </div>
-</div>
 
 @php
     $paletteColors = \App\Models\Color::ordered()->get();
@@ -90,12 +69,13 @@
 
 <div class="form-group">
     <label class="form-label">
-        Colors (optional)
+        Colors
         <a href="{{ route('admin.colors.index') }}" target="_blank" style="font-weight: 400; font-size: 0.8rem;">Manage colors</a>
     </label>
     <small style="display: block; color: var(--text-muted); margin-bottom: 0.5rem;">
-        Pick a color from the palette to give it its own photo gallery and its own stock by size. Leave empty for a single-color product.
+        Stock is tracked per color and size. Add at least one color to set stock.
     </small>
+    @error('colors') <span class="field-error">{{ $message }}</span> @enderror
 
     <div id="color-rows">
         @foreach ($colorRows as $i => $color)
@@ -111,6 +91,7 @@
                                     <option value="{{ $paletteColor->id }}" data-hex="{{ $paletteColor->hex }}" @selected((string) ($color['color_id'] ?? '') === (string) $paletteColor->id)>{{ $paletteColor->name }}</option>
                                 @endforeach
                             </select>
+                            @error('colors.'.$i.'.color_id') <span class="field-error">{{ $message }}</span> @enderror
                         </div>
                         <div class="form-group" style="max-width: 60px;">
                             <label class="form-label">&nbsp;</label>
@@ -122,6 +103,7 @@
                         <label class="form-label">Photos</label>
                         <input type="file" name="colors[{{ $i }}][images][]" accept="image/*" multiple class="form-control color-images-input">
                         <small style="color: var(--text-muted);">You can select multiple images</small>
+                        @error('colors.'.$i.'.images.*') <span class="field-error">{{ $message }}</span> @enderror
                         <div class="gallery-grid color-existing-images">
                             @foreach ($color['images'] ?? [] as $img)
                                 <div class="gallery-item">
@@ -213,7 +195,7 @@
 
 <div class="form-group">
     <label for="thumbnail" class="form-label">Thumbnail Image</label>
-    <input id="thumbnail" type="file" name="thumbnail" accept="image/*" class="form-control">
+    <input id="thumbnail" type="file" name="thumbnail" accept="image/*" class="form-control" @if (! isset($product)) required @endif>
     <small style="color: var(--text-muted);">PNG, JPG up to 2MB</small>
     @error('thumbnail') <span class="field-error">{{ $message }}</span> @enderror
     <img id="thumbnail-preview" src="{{ isset($product) && $product->thumbnail ? asset('uploads/'.$product->thumbnail) : '' }}"
@@ -250,10 +232,16 @@
     @endphp
 
     <div id="specification-rows">
-        @foreach ($specRows as $spec)
+        @foreach ($specRows as $i => $spec)
             <div class="spec-row">
-                <input type="text" name="specification_keys[]" value="{{ $spec['key'] }}" placeholder="e.g. Material" class="form-control">
-                <input type="text" name="specification_values[]" value="{{ $spec['value'] }}" placeholder="e.g. Cotton" class="form-control">
+                <div style="flex: 1;">
+                    <input type="text" name="specification_keys[]" value="{{ $spec['key'] }}" placeholder="e.g. Material" class="form-control">
+                    @error('specification_keys.'.$i) <span class="field-error">{{ $message }}</span> @enderror
+                </div>
+                <div style="flex: 1;">
+                    <input type="text" name="specification_values[]" value="{{ $spec['value'] }}" placeholder="e.g. Cotton" class="form-control">
+                    @error('specification_values.'.$i) <span class="field-error">{{ $message }}</span> @enderror
+                </div>
                 <button type="button" class="btn-icon danger" data-action="remove-spec-row" title="Remove">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
                 </button>

@@ -30,7 +30,11 @@ class ProductSize extends Model
             Product::whereKey($productSize->product_id)->update(['stock' => $total]);
         };
 
-        static::saved($resync);
+        // `increment()`/`decrement()` (used for order placement/cancellation
+        // and manual stock adjustments) only fire `created`/`updated`, never
+        // `saved` — so the resync must hook those instead of `saved`.
+        static::created($resync);
+        static::updated($resync);
         static::deleted($resync);
     }
 

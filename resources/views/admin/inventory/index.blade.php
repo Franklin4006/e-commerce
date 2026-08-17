@@ -47,6 +47,7 @@
                         </td>
                         <td class="text-right">
                             <a href="{{ route('admin.inventory.show', $product) }}" class="btn btn-secondary btn-sm">Adjust</a>
+                            <a href="{{ route('admin.inventory.history', $product) }}" class="btn btn-secondary btn-sm">History</a>
                         </td>
                     </tr>
                 @empty
