@@ -140,6 +140,16 @@ class Cart
         return $lineItems->filter()->values();
     }
 
+    /**
+     * Build a single line item in the same shape as contents(), without touching
+     * cart storage. Used by the "Buy Now" checkout flow to check out one product
+     * on its own, independent of whatever else is already in the cart.
+     */
+    public static function buildItem(Product $product, string $size, int $quantity, ?ProductColor $color = null): ?array
+    {
+        return static::toLineItem($product, $size, $quantity, $color);
+    }
+
     public static function total(): float
     {
         return (float) static::contents()->sum('subtotal');

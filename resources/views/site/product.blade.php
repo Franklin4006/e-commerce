@@ -340,8 +340,6 @@
         </section>
     @endif
 
-    <script src="{{ asset('js/cart.js') }}"></script>
-    <script src="{{ asset('js/wishlist.js') }}"></script>
     <script src="{{ asset('js/pdp-zoom.js') }}"></script>
     <script src="{{ asset('js/pdp-tabs.js') }}"></script>
 </x-layouts.site>

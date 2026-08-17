@@ -6,14 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\ProductSize;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Cart;
 use App\Support\OrderCreator;
 use App\Support\OrderTotals;
 use App\Support\Razorpay;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Razorpay\Api\Errors\SignatureVerificationError;
@@ -21,11 +25,54 @@ use RuntimeException;
 
 class CheckoutController extends Controller
 {
+    /**
+     * Stash the single product/size/color/quantity chosen via "Buy Now" in the
+     * session and send the shopper to checkout. Checkout then sources its items
+     * from this instead of the cart, so the rest of the cart is left untouched.
+     */
+    public function buyNow(Request $request, Product $product): JsonResponse
+    {
+        $validated = $request->validate([
+            'size' => ['required', 'string'],
+            'color_id' => ['nullable', 'integer'],
+            'quantity' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $colorId = $validated['color_id'] ?? null;
+        $color = $colorId ? $product->colors()->find($colorId) : null;
+
+        if ($colorId && ! $color) {
+            return response()->json(['message' => 'The selected color is unavailable.'], 422);
+        }
+
+        $quantity = max(1, (int) ($validated['quantity'] ?? 1));
+
+        $sizeRow = ProductSize::where('product_id', $product->id)
+            ->where('product_color_id', $colorId)
+            ->where('size', $validated['size'])
+            ->first();
+
+        if (! $sizeRow || $sizeRow->stock < $quantity) {
+            return response()->json(['message' => 'Sorry, this item is out of stock.'], 422);
+        }
+
+        $request->session()->put('buy_now', [
+            'product_id' => $product->id,
+            'size' => $validated['size'],
+            'color_id' => $colorId,
+            'quantity' => $quantity,
+        ]);
+
+        return response()->json(['redirect' => route('checkout.create')]);
+    }
+
     public function create(Request $request): View|RedirectResponse
     {
-        $items = Cart::contents();
+        $items = $this->checkoutItems($request);
 
         if ($items->isEmpty()) {
+            $request->session()->forget('buy_now');
+
             return redirect()->route('cart.index')->withErrors(['cart' => 'Your cart is empty.']);
         }
 
@@ -35,7 +82,7 @@ class CheckoutController extends Controller
             return redirect()->route('addresses.create', ['redirect' => 'checkout'])->with('status', 'Please add an address before checking out.');
         }
 
-        $coupon = Coupon::resolveApplied($request, Cart::total());
+        $coupon = Coupon::resolveApplied($request, (float) $items->sum('subtotal'));
 
         $previewAddress = $request->filled('shipping_address_id')
             ? $addresses->firstWhere('id', (int) $request->query('shipping_address_id'))
@@ -48,7 +95,7 @@ class CheckoutController extends Controller
             'razorpayEnabled' => Razorpay::isConfigured(),
             'codEnabled' => Setting::get('cod_enabled', '1') !== '0',
             'siteSettings' => Setting::allSettings(),
-        ] + OrderTotals::forCart($previewAddress, $coupon);
+        ] + OrderTotals::forCart($previewAddress, $coupon, $items);
 
         return view('site.checkout.create', $data);
     }
@@ -88,14 +135,16 @@ class CheckoutController extends Controller
             }
         }
 
-        $items = Cart::contents();
+        $items = $this->checkoutItems($request);
 
         if ($items->isEmpty()) {
+            $request->session()->forget('buy_now');
+
             return redirect()->route('cart.index')->withErrors(['cart' => 'Your cart is empty.']);
         }
 
-        $coupon = Coupon::resolveApplied($request, Cart::total());
-        $totals = OrderTotals::forCart($shippingAddress, $coupon);
+        $coupon = Coupon::resolveApplied($request, (float) $items->sum('subtotal'));
+        $totals = OrderTotals::forCart($shippingAddress, $coupon, $items);
         $itemsData = OrderCreator::snapshotItems($items);
 
         if ($validated['payment_method'] === 'cod') {
@@ -109,7 +158,7 @@ class CheckoutController extends Controller
                 static::redeemCoupon($coupon, $user, $order);
             }
 
-            Cart::clear();
+            $this->clearCheckoutItems($request);
 
             OrderCreator::sendConfirmationEmail($user, $order);
 
@@ -131,6 +180,7 @@ class CheckoutController extends Controller
             'items' => $itemsData,
             'totals' => $totals,
             'coupon_id' => $coupon?->id,
+            'buy_now' => $request->session()->has('buy_now'),
         ]);
 
         return view('site.checkout.pay', [
@@ -205,11 +255,56 @@ class CheckoutController extends Controller
 
         $request->session()->forget('razorpay_checkout');
 
-        Cart::clear();
+        if ($pending['buy_now'] ?? false) {
+            $request->session()->forget('buy_now');
+        } else {
+            Cart::clear();
+        }
 
         OrderCreator::sendConfirmationEmail($user, $order);
 
         return redirect()->route('checkout.confirmation', $order);
+    }
+
+    /**
+     * Resolve the items being checked out: a single Buy Now selection if one is
+     * pending in the session, otherwise the full cart.
+     */
+    protected function checkoutItems(Request $request): Collection
+    {
+        $buyNow = $request->session()->get('buy_now');
+
+        if (! $buyNow) {
+            return Cart::contents();
+        }
+
+        $product = Product::with('category', 'sizes', 'colors')->find($buyNow['product_id']);
+
+        if (! $product) {
+            return collect();
+        }
+
+        $color = $buyNow['color_id'] ? $product->colors->firstWhere('id', $buyNow['color_id']) : null;
+
+        $item = Cart::buildItem($product, $buyNow['size'], $buyNow['quantity'], $color);
+
+        return $item ? collect([$item]) : collect();
+    }
+
+    /**
+     * Clear whatever was just checked out: the Buy Now selection if that's what
+     * was used, otherwise the whole cart. Never clears the cart during a Buy Now
+     * order, since the cart's own items weren't part of it.
+     */
+    protected function clearCheckoutItems(Request $request): void
+    {
+        if ($request->session()->has('buy_now')) {
+            $request->session()->forget('buy_now');
+
+            return;
+        }
+
+        Cart::clear();
     }
 
     protected static function redeemCoupon(Coupon $coupon, User $user, Order $order): void

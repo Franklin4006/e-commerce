@@ -278,5 +278,7 @@
     <script src="{{ asset('js/header-search.js') }}"></script>
     <script src="{{ asset('js/aos.js') }}"></script>
     <script src="{{ asset('js/aos-init.js') }}"></script>
+    <script src="{{ asset('js/cart.js') }}?v=1.0"></script>
+    <script src="{{ asset('js/wishlist.js') }}?v=1.0"></script>
 </body>
 </html>

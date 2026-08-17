@@ -34,7 +34,4 @@
             {{ $products->links() }}
         </div>
     @endif
-
-    <script src="{{ asset('js/cart.js') }}"></script>
-    <script src="{{ asset('js/wishlist.js') }}"></script>
 </x-layouts.site>

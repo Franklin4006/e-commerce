@@ -148,6 +148,4 @@
     @if ($banners->count() > 1)
         <script src="{{ asset('js/hero-slider.js') }}"></script>
     @endif
-    <script src="{{ asset('js/cart.js') }}"></script>
-    <script src="{{ asset('js/wishlist.js') }}"></script>
 </x-layouts.site>

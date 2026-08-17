@@ -48,6 +48,26 @@
         });
     }
 
+    // Sets this single product as a standalone checkout selection (independent
+    // of the cart) so checkout only ever includes this item, no matter what
+    // else is already sitting in the cart.
+    function buyNow(productId, size, quantity, colorId) {
+        return fetch('/buy-now/' + productId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ size: size, quantity: quantity, color_id: colorId }),
+        }).then(function (res) {
+            return res.json().then(function (body) {
+                return { ok: res.ok, body: body };
+            });
+        });
+    }
+
     // Wires up the color selector + size selector + qty stepper + Add to
     // Cart / Buy Now controls inside a single `.product-detail-purchase`
     // container. This runs once for the product detail page's own buybox,
@@ -306,10 +326,10 @@
                 clampQty();
                 buyBtn.disabled = true;
 
-                addToCart(productId, selectedSize, parseInt(qtyInput.value, 10), selectedColorId)
+                buyNow(productId, selectedSize, parseInt(qtyInput.value, 10), selectedColorId)
                     .then(function (result) {
                         if (result.ok) {
-                            window.location.href = '/cart';
+                            window.location.href = result.body.redirect || '/checkout';
                         } else {
                             showToast(result.body.message || 'Something went wrong.', 'error');
                             buyBtn.disabled = false;

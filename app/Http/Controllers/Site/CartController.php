@@ -18,6 +18,10 @@ class CartController extends Controller
 {
     public function index(Request $request): View
     {
+        // Viewing the cart supersedes any pending single-item Buy Now checkout,
+        // so "Proceed to Checkout" from here always checks out the real cart.
+        $request->session()->forget('buy_now');
+
         $items = Cart::contents();
         $coupon = Coupon::resolveApplied($request, Cart::total());
         $shippingAddress = $request->user()?->addresses()->orderByDesc('is_default')->first();

@@ -4,17 +4,21 @@ namespace App\Support;
 
 use App\Models\Address;
 use App\Models\Coupon;
+use Illuminate\Support\Collection;
 
 class OrderTotals
 {
     /**
+     * @param  Collection<int, array{subtotal: float, mrp_subtotal: float}>|null  $items  Defaults to the current cart; pass an explicit collection (e.g. a single Buy Now item) to total something other than the full cart.
      * @return array{totalMrp: float, total: float, savings: float, shippingCharge: float, couponCode: ?string, couponDiscount: float, grandTotal: float}
      */
-    public static function forCart(?Address $shippingAddress = null, ?Coupon $coupon = null): array
+    public static function forCart(?Address $shippingAddress = null, ?Coupon $coupon = null, ?Collection $items = null): array
     {
-        $totalMrp = Cart::totalMrp();
-        $total = Cart::total();
-        $savings = Cart::savings();
+        $items ??= Cart::contents();
+
+        $totalMrp = (float) $items->sum('mrp_subtotal');
+        $total = (float) $items->sum('subtotal');
+        $savings = $totalMrp - $total;
 
         return static::withShipping($totalMrp, $total, $savings, $shippingAddress, $coupon);
     }

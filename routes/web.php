@@ -46,6 +46,8 @@ Route::post('/cart/{product}', [CartController::class, 'store'])->name('cart.sto
 Route::put('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{product}', [CartController::class, 'destroy'])->name('cart.destroy');
 
+Route::post('/buy-now/{product}', [CheckoutController::class, 'buyNow'])->name('checkout.buy-now');
+
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
 Route::post('/wishlist/{product}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
