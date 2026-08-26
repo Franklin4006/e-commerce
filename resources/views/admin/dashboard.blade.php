@@ -1,14 +1,41 @@
 <x-layouts.admin title="Dashboard">
     <h1 class="page-title">Dashboard</h1>
 
+    <div class="card card-flush">
+        <div class="card-header card-header-filters">
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="filter-bar">
+                <select name="period" id="dashboard-period-select" class="form-control">
+                    @foreach ($periods as $value => $label)
+                        <option value="{{ $value }}" @selected($period === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+
+                <div id="dashboard-from-group" style="{{ $period === 'custom' ? '' : 'display: none;' }}">
+                    <input type="date" name="from" value="{{ request('from') }}" class="form-control" placeholder="From">
+                </div>
+
+                <div id="dashboard-to-group" style="{{ $period === 'custom' ? '' : 'display: none;' }}">
+                    <input type="date" name="to" value="{{ request('to') }}" class="form-control" placeholder="To">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Filter</button>
+                @if ($period !== 'this_month')
+                    <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">Reset</a>
+                @endif
+
+                <span class="muted" style="margin-left: auto; align-self: center;">{{ $rangeLabel }}</span>
+            </form>
+        </div>
+    </div>
+
     <div class="dashboard-stats">
         <a href="{{ route('admin.orders.index') }}" class="stat-tile tile-success">
             <span class="stat-tile-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
             </span>
             <div class="stat-tile-body">
-                <div class="stat-tile-value">₹{{ number_format($revenueThisMonth, 0) }}</div>
-                <div class="stat-tile-label">Revenue this month</div>
+                <div class="stat-tile-value">₹{{ number_format($revenueTotal, 0) }}</div>
+                <div class="stat-tile-label">Revenue ({{ $periodLabel }})</div>
             </div>
         </a>
 
@@ -17,8 +44,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             </span>
             <div class="stat-tile-body">
-                <div class="stat-tile-value">{{ number_format($ordersThisMonth) }}</div>
-                <div class="stat-tile-label">Orders this month</div>
+                <div class="stat-tile-value">{{ number_format($orderCount) }}</div>
+                <div class="stat-tile-label">Orders ({{ $periodLabel }})</div>
             </div>
         </a>
 
@@ -45,7 +72,7 @@
 
     <div class="card card-flush card-outline dashboard-chart-card">
         <div class="card-header">
-            <h2 class="card-title">Revenue (Last 30 Days)</h2>
+            <h2 class="card-title">Revenue ({{ $periodLabel }})</h2>
         </div>
         <div class="card-body">
             @php $chartMax = max(1, collect($chartData)->max('total')); @endphp
@@ -129,4 +156,6 @@
             </div>
         </div>
     </div>
+
+    <script src="{{ asset('js/dashboard-filter.js') }}"></script>
 </x-layouts.admin>

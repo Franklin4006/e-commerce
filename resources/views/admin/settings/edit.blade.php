@@ -1,7 +1,7 @@
 <x-layouts.admin title="Settings">
     @php
         $settingsTabFields = [
-            'general' => ['site_name', 'logo', 'meta_title', 'meta_description', 'meta_keywords', 'primary_color', 'secondary_color'],
+            'general' => ['site_name', 'logo', 'favicon', 'meta_title', 'meta_description', 'meta_keywords', 'primary_color', 'secondary_color'],
             'pages' => ['about_us_title', 'about_us_content', 'terms_title', 'terms_content', 'privacy_title', 'privacy_content'],
             'contact' => ['email', 'phone', 'address', 'whatsapp_number', 'social_facebook', 'social_instagram', 'social_twitter', 'social_youtube'],
             'mail' => ['mail_mailer', 'mail_host', 'mail_port', 'mail_username', 'mail_password', 'mail_encryption', 'mail_from_address', 'mail_from_name'],
@@ -81,6 +81,15 @@
                 @error('logo') <span class="field-error">{{ $message }}</span> @enderror
                 <img id="logo-preview" src="{{ ! empty($settings['logo']) ? asset('uploads/'.$settings['logo']) : '' }}"
                      alt="" class="thumb-lg form-preview" style="{{ ! empty($settings['logo']) ? '' : 'display: none;' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="favicon" class="form-label">Favicon</label>
+                <input id="favicon" type="file" name="favicon" accept="image/*" class="form-control">
+                <small style="color: var(--text-muted);">Square PNG or ICO up to 1MB</small>
+                @error('favicon') <span class="field-error">{{ $message }}</span> @enderror
+                <img id="favicon-preview" src="{{ ! empty($settings['favicon']) ? asset('uploads/'.$settings['favicon']) : '' }}"
+                     alt="" class="thumb-lg form-preview" style="{{ ! empty($settings['favicon']) ? '' : 'display: none;' }}">
             </div>
         </section>
 

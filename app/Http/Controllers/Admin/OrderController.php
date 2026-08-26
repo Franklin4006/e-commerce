@@ -51,8 +51,42 @@ class OrderController extends Controller
 
         $statusChanged = $order->status !== $validated['status'];
 
-        DB::transaction(function () use ($request, $order, $validated) {
-            if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
+        $this->applyStatusTransition($order, $validated['status'], $validated['note'] ?? null, $request->user()->id);
+
+        if ($statusChanged) {
+            OrderCreator::sendStatusUpdateEmail($order);
+        }
+
+        return back()->with('status', 'Order status updated successfully.');
+    }
+
+    public function bulkUpdateStatus(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'order_ids' => ['required', 'array', 'min:1'],
+            'order_ids.*' => ['integer', 'exists:orders,id'],
+            'status' => ['required', Rule::in(Order::STATUSES)],
+        ]);
+
+        $orders = Order::with('items')->whereIn('id', $validated['order_ids'])->get();
+
+        foreach ($orders as $order) {
+            $statusChanged = $order->status !== $validated['status'];
+
+            $this->applyStatusTransition($order, $validated['status'], null, $request->user()->id);
+
+            if ($statusChanged) {
+                OrderCreator::sendStatusUpdateEmail($order);
+            }
+        }
+
+        return back()->with('status', $orders->count().' order(s) updated to "'.ucfirst($validated['status']).'".');
+    }
+
+    private function applyStatusTransition(Order $order, string $status, ?string $note, int $changedByUserId): void
+    {
+        DB::transaction(function () use ($order, $status, $note, $changedByUserId) {
+            if ($status === 'cancelled' && $order->status !== 'cancelled') {
                 foreach ($order->items as $item) {
                     if (! $item->product_id || ! $item->size) {
                         continue;
@@ -75,7 +109,7 @@ class OrderController extends Controller
                         'size' => $item->size,
                         'product_color_id' => $item->product_color_id,
                         'order_id' => $order->id,
-                        'changed_by' => $request->user()->id,
+                        'changed_by' => $changedByUserId,
                         'quantity_change' => $item->quantity,
                         'stock_after' => $sizeRow->stock,
                         'reason' => 'Order cancelled',
@@ -83,20 +117,14 @@ class OrderController extends Controller
                 }
             }
 
-            $order->update(['status' => $validated['status']]);
+            $order->update(['status' => $status]);
 
             $order->statusHistories()->create([
-                'status' => $validated['status'],
-                'note' => $validated['note'] ?? null,
-                'changed_by' => $request->user()->id,
+                'status' => $status,
+                'note' => $note,
+                'changed_by' => $changedByUserId,
             ]);
         });
-
-        if ($statusChanged) {
-            OrderCreator::sendStatusUpdateEmail($order);
-        }
-
-        return back()->with('status', 'Order status updated successfully.');
     }
 
     public function updatePaymentStatus(Request $request, Order $order): RedirectResponse

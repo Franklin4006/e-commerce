@@ -22,7 +22,7 @@
         <meta name="keywords" content="{{ $metaKeywords }}">
     @endif
     <title>{{ isset($title) ? $title.' - '.$siteName : $siteName }}</title>
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ ! empty($siteSettings['favicon']) ? asset('uploads/'.$siteSettings['favicon']) : asset('favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap" rel="stylesheet">

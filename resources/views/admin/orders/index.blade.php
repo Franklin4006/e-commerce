@@ -23,49 +23,71 @@
             </form>
         </div>
 
-        <div class="table-wrap">
-            <table>
-            <thead>
-                <tr>
-                    <th>Order #</th>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Payment</th>
-                    <th>Status</th>
-                    <th>Total</th>
-                    <th class="text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($orders as $order)
+        <form method="POST" action="{{ route('admin.orders.bulk-status.update') }}" id="bulk-status-form">
+            @csrf
+            @method('PUT')
+
+            <div class="card-header card-header-filters" id="bulk-actions-bar" style="display: none;">
+                <div class="filter-bar">
+                    <span class="muted"><span id="bulk-selected-count">0</span> selected</span>
+
+                    <select name="status" class="form-control" required>
+                        <option value="">Set status to...</option>
+                        @foreach (\App\Models\Order::STATUSES as $status)
+                            <option value="{{ $status }}">{{ ucfirst($status) }}</option>
+                        @endforeach
+                    </select>
+
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                <thead>
                     <tr>
-                        <td>{{ $order->order_number }}</td>
-                        <td>{{ $order->customer_name }}</td>
-                        <td>{{ $order->created_at->format('d M Y') }}</td>
-                        <td>
-                            {{ strtoupper($order->payment_method) }}
-                            @if ($order->payment_status === 'paid')
-                                <span class="badge badge-success">Paid</span>
-                            @else
-                                <span class="badge badge-muted">{{ ucfirst($order->payment_status) }}</span>
-                            @endif
-                        </td>
-                        <td><span class="badge {{ \App\Models\Order::badgeClassForStatus($order->status) }}">{{ ucfirst($order->status) }}</span></td>
-                        <td>₹{{ number_format($order->grand_total, 2) }}</td>
-                        <td class="text-right">
-                            <a href="{{ route('admin.orders.show', $order) }}" class="btn-icon" title="View">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            </a>
-                        </td>
+                        <th style="width: 2rem;"><input type="checkbox" id="order-select-all"></th>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th class="text-right">Actions</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="empty-row">No orders yet.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-            </table>
-        </div>
+                </thead>
+                <tbody>
+                    @forelse ($orders as $order)
+                        <tr>
+                            <td><input type="checkbox" name="order_ids[]" value="{{ $order->id }}" class="order-row-checkbox"></td>
+                            <td>{{ $order->order_number }}</td>
+                            <td>{{ $order->customer_name }}</td>
+                            <td>{{ $order->created_at->format('d M Y') }}</td>
+                            <td>
+                                {{ strtoupper($order->payment_method) }}
+                                @if ($order->payment_status === 'paid')
+                                    <span class="badge badge-success">Paid</span>
+                                @else
+                                    <span class="badge badge-muted">{{ ucfirst($order->payment_status) }}</span>
+                                @endif
+                            </td>
+                            <td><span class="badge {{ \App\Models\Order::badgeClassForStatus($order->status) }}">{{ ucfirst($order->status) }}</span></td>
+                            <td>₹{{ number_format($order->grand_total, 2) }}</td>
+                            <td class="text-right">
+                                <a href="{{ route('admin.orders.show', $order) }}" class="btn-icon" title="View">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="empty-row">No orders yet.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+                </table>
+            </div>
+        </form>
 
         @if ($orders->hasPages())
             <div class="card-footer">
@@ -73,4 +95,6 @@
             </div>
         @endif
     </div>
+
+    <script src="{{ asset('js/orders-bulk-status.js') }}"></script>
 </x-layouts.admin>

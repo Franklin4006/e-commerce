@@ -23,6 +23,7 @@ class SettingController extends Controller
         $validated = $request->validate([
             'site_name' => ['required', 'string', 'max:255'],
             'logo' => ['nullable', 'image', 'max:2048'],
+            'favicon' => ['nullable', 'image', 'max:1024'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'meta_keywords' => ['nullable', 'string', 'max:255'],
@@ -71,6 +72,17 @@ class SettingController extends Controller
             $validated['logo'] = $request->file('logo')->store('settings', 'public');
         } else {
             unset($validated['logo']);
+        }
+
+        if ($request->hasFile('favicon')) {
+            $oldFavicon = Setting::get('favicon');
+            if ($oldFavicon) {
+                Storage::disk('public')->delete($oldFavicon);
+            }
+
+            $validated['favicon'] = $request->file('favicon')->store('settings', 'public');
+        } else {
+            unset($validated['favicon']);
         }
 
         if (! $request->filled('mail_password')) {
