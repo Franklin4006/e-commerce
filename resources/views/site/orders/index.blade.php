@@ -58,8 +58,17 @@
 
                                 <div class="order-card-items">
                                     @foreach ($order->items as $item)
-                                        @php $product = $item->product; @endphp
-                                        <a class="order-card-item" href="{{ $product ? route('product.show', $product) : route('orders.show', $order) }}">
+                                        @php
+                                            $product = $item->product;
+                                            $itemUrl = $product
+                                                ? route('product.show', array_filter([
+                                                    'product' => $product,
+                                                    'color' => $item->product_color_id,
+                                                    'size' => $item->size,
+                                                ]))
+                                                : route('orders.show', $order);
+                                        @endphp
+                                        <a class="order-card-item" href="{{ $itemUrl }}">
                                             @if ($product && $product->thumbnail)
                                                 <img src="{{ asset('uploads/'.$product->thumbnail) }}" alt="{{ $item->product_name }}" class="order-card-item-img">
                                             @else

@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=1.1">
     <link rel="stylesheet" href="{{ asset('css/site-theme.css') }}">
     <link rel="stylesheet" href="{{ asset('css/aos.css') }}">
 </head>
@@ -278,7 +278,7 @@
     <script src="{{ asset('js/header-search.js') }}"></script>
     <script src="{{ asset('js/aos.js') }}"></script>
     <script src="{{ asset('js/aos-init.js') }}"></script>
-    <script src="{{ asset('js/cart.js') }}?v=1.0"></script>
+    <script src="{{ asset('js/cart.js') }}?v=1.1"></script>
     <script src="{{ asset('js/wishlist.js') }}?v=1.0"></script>
 </body>
 </html>

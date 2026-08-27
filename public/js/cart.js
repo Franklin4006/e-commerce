@@ -340,18 +340,40 @@
 
         applySizeAvailability();
 
+        // Links from the cart / order pages carry ?color=&size= for the
+        // combination the shopper actually picked, so the PDP lands on the
+        // same one instead of whatever's auto-selected by default. Only
+        // applies to the real page (not the quick-view modal, which has no
+        // URL of its own to carry these).
+        var requestedColorId = null;
+        var requestedSize = null;
+        if (!quickViewLayout) {
+            var urlParams = new URLSearchParams(window.location.search);
+            requestedColorId = urlParams.get('color');
+            requestedSize = urlParams.get('size');
+        }
+
         // Auto-select the first purchasable color + size, so a shopper lands
         // on a ready-to-buy combination instead of two empty prompts. Prefers
-        // a color/size that's actually in stock, falling back to just the
-        // first one (still lets an out-of-stock product show its gallery).
+        // a requested color/size (from the URL) or one that's actually in
+        // stock, falling back to just the first one (still lets an
+        // out-of-stock product show its gallery).
         if (colorSelector) {
             var colorButtons = Array.prototype.slice.call(colorSelector.querySelectorAll('.color-option'));
-            var colorToSelect = colorButtons.find(function (btn) {
-                var colorSizes = sizesByColor[btn.dataset.colorId] || {};
-                return Object.keys(colorSizes).some(function (size) {
-                    return colorSizes[size] > 0;
-                });
-            }) || colorButtons[0];
+            var colorToSelect = requestedColorId
+                ? colorButtons.find(function (btn) {
+                    return btn.dataset.colorId === requestedColorId;
+                })
+                : null;
+
+            if (!colorToSelect) {
+                colorToSelect = colorButtons.find(function (btn) {
+                    var colorSizes = sizesByColor[btn.dataset.colorId] || {};
+                    return Object.keys(colorSizes).some(function (size) {
+                        return colorSizes[size] > 0;
+                    });
+                }) || colorButtons[0];
+            }
 
             if (colorToSelect) {
                 colorToSelect.click();
@@ -359,9 +381,18 @@
         }
 
         if (sizeSelector) {
-            var sizeToSelect = Array.prototype.slice.call(sizeSelector.querySelectorAll('.size-option')).find(function (btn) {
-                return !btn.disabled;
-            });
+            var sizeOptions = Array.prototype.slice.call(sizeSelector.querySelectorAll('.size-option'));
+            var sizeToSelect = requestedSize
+                ? sizeOptions.find(function (btn) {
+                    return btn.dataset.size === requestedSize && !btn.disabled;
+                })
+                : null;
+
+            if (!sizeToSelect) {
+                sizeToSelect = sizeOptions.find(function (btn) {
+                    return !btn.disabled;
+                });
+            }
 
             if (sizeToSelect) {
                 sizeToSelect.click();

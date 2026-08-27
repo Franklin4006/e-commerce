@@ -67,16 +67,43 @@
                     </thead>
                     <tbody>
                         @foreach ($order->items as $item)
+                            @php
+                                $product = $item->product;
+                                $productUrl = $product ? route('product.show', array_filter([
+                                    'product' => $product,
+                                    'color' => $item->product_color_id,
+                                    'size' => $item->size,
+                                ])) : null;
+                            @endphp
                             <tr>
                                 <td class="order-item-name">
-                                    {{ $item->product_name }}
-                                    @if ($item->size || $item->color_name)
-                                        <br>
-                                        <small style="color: var(--text-muted);">
-                                            @if ($item->color_name) {{ $item->color_name }} @endif
-                                            @if ($item->size) @if ($item->color_name) &middot; @endif Size {{ $item->size }} @endif
-                                        </small>
-                                    @endif
+                                    <div class="order-item-product">
+                                        @if ($product)
+                                            <a href="{{ $productUrl }}" class="order-item-thumb-link">
+                                                @if ($product->thumbnail)
+                                                    <img src="{{ asset('uploads/'.$product->thumbnail) }}" alt="{{ $item->product_name }}" class="order-item-thumb">
+                                                @else
+                                                    <span class="order-item-thumb order-item-thumb--empty"></span>
+                                                @endif
+                                            </a>
+                                        @else
+                                            <span class="order-item-thumb order-item-thumb--empty"></span>
+                                        @endif
+                                        <div class="order-item-info">
+                                            @if ($product)
+                                                <a href="{{ $productUrl }}" class="order-item-link">{{ $item->product_name }}</a>
+                                            @else
+                                                {{ $item->product_name }}
+                                            @endif
+                                            @if ($item->size || $item->color_name)
+                                                <br>
+                                                <small style="color: var(--text-muted);">
+                                                    @if ($item->color_name) {{ $item->color_name }} @endif
+                                                    @if ($item->size) @if ($item->color_name) &middot; @endif Size {{ $item->size }} @endif
+                                                </small>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>{{ $item->quantity }}</td>
                                 <td class="text-right">₹{{ number_format($item->sale_price, 2) }}</td>

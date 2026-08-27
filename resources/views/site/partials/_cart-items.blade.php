@@ -10,15 +10,22 @@
 
                 <div class="cart-table">
                     @foreach ($items as $item)
+                        @php
+                            $productUrl = route('product.show', array_filter([
+                                'product' => $item['product'],
+                                'color' => $item['color']?->id,
+                                'size' => $item['size'],
+                            ]));
+                        @endphp
                         <div class="cart-row">
-                            @if ($item['product']->thumbnail)
-                                <img src="{{ asset('uploads/'.$item['product']->thumbnail) }}" alt="{{ $item['product']->name }}" class="cart-row-image">
-                            @else
-                                <div class="cart-row-image"></div>
-                            @endif
+                            <a href="{{ $productUrl }}" class="cart-row-image">
+                                @if ($item['product']->thumbnail)
+                                    <img src="{{ asset('uploads/'.$item['product']->thumbnail) }}" alt="{{ $item['product']->name }}">
+                                @endif
+                            </a>
 
                             <div class="cart-row-info">
-                                <a href="{{ route('product.show', $item['product']) }}" class="cart-row-name">{{ $item['product']->name }}</a>
+                                <a href="{{ $productUrl }}" class="cart-row-name">{{ $item['product']->name }}</a>
                                 @if ($item['color'])
                                     <span class="cart-row-size">Color: {{ $item['color']->name }}</span>
                                 @endif
