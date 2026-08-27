@@ -4,6 +4,7 @@
             <tr>
                 <th>Thumbnail</th>
                 <th>Name</th>
+                <th>Slug</th>
                 <th>Category</th>
                 <th>MRP</th>
                 <th>Sale Price</th>
@@ -25,6 +26,7 @@
                         @endif
                     </td>
                     <td>{{ $product->name }}</td>
+                    <td><code>{{ $product->slug }}</code></td>
                     <td>{{ $product->category->name }}</td>
                     <td>₹{{ number_format($product->mrp, 2) }}</td>
                     <td>₹{{ number_format($product->sale_price, 2) }}</td>
@@ -67,7 +69,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="empty-row">No products yet.</td>
+                    <td colspan="11" class="empty-row">No products yet.</td>
                 </tr>
             @endforelse
         </tbody>

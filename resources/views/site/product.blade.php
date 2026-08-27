@@ -9,7 +9,6 @@
         $ratingCount = $product->reviewsCount();
         $ratingAvg = $ratingCount > 0 ? $product->averageRating() : 0;
         $avgRoundedTop = round($ratingAvg);
-        [$priceWhole, $priceFrac] = explode('.', number_format($product->sale_price, 2, '.', ''));
         $deliveryDate = now()->addDays(4);
         $inWishlist = \App\Support\Wishlist::has($product->id);
         $shareUrl = route('product.show', $product);
@@ -73,7 +72,7 @@
                         <span class="pdp-mrp-inline">₹{{ number_format($product->mrp, 2) }}</span>
                     @endif
                     <span class="price price-lg">
-                        <span class="price-cur">₹</span><span class="price-whole">{{ number_format((int) $priceWhole) }}</span><span class="price-frac">{{ $priceFrac }}</span>
+                        <span class="price-cur">₹</span><span class="price-whole">{{ number_format($product->sale_price, 2) }}</span>
                     </span>
                     @if ($product->discountPercentage() > 0)
                         <span class="pdp-price-off">{{ $product->discountPercentage() }}% off</span>

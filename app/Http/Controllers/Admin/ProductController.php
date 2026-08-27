@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -235,6 +236,26 @@ class ProductController extends Controller
     {
         $rules = [
             'name' => ['required', 'string', 'max:255', Rule::unique('products')->ignore($product)],
+            'slug' => [
+                'nullable',
+                'string',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail) use ($request, $product): void {
+                    $slug = Str::slug(filled($value) ? $value : $request->input('name', ''));
+
+                    if ($slug === '') {
+                        return;
+                    }
+
+                    $slugTaken = Product::where('slug', $slug)
+                        ->when($product, fn ($query) => $query->where('id', '!=', $product->id))
+                        ->exists();
+
+                    if ($slugTaken) {
+                        $fail('This slug is already used by another product. Please choose a different one.');
+                    }
+                },
+            ],
             'category_id' => ['required', 'exists:categories,id'],
             'description' => ['nullable', 'string'],
             'mrp' => ['required', 'numeric', 'min:0.01'],
@@ -278,6 +299,8 @@ class ProductController extends Controller
         ];
 
         $validated = $request->validate($rules, $messages, $attributes) + ['status' => $request->boolean('status')];
+
+        $validated['slug'] = Str::slug(filled($validated['slug'] ?? null) ? $validated['slug'] : $validated['name']);
 
         unset($validated['colors']);
 

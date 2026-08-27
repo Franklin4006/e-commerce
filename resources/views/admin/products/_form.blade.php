@@ -13,6 +13,13 @@
 </div>
 
 <div class="form-group">
+    <label for="slug" class="form-label">Slug</label>
+    <input id="slug" type="text" name="slug" value="{{ old('slug', $product->slug ?? '') }}" class="form-control">
+    <small style="color: var(--text-muted);">Used in the product URL. Auto-fills from the product name — edit it directly to set a custom slug.</small>
+    @error('slug') <span class="field-error">{{ $message }}</span> @enderror
+</div>
+
+<div class="form-group">
     <label for="category_id" class="form-label">Category</label>
     <select id="category_id" name="category_id" required class="form-control" data-searchable-select>
         <option value="">Select a category</option>

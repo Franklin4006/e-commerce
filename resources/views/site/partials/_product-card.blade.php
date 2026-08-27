@@ -45,9 +45,6 @@
 
         @php
             $shortPrice = $shortPrice ?? false;
-            if (! $shortPrice) {
-                [$priceWhole, $priceFrac] = explode('.', number_format($product->sale_price, 2, '.', ''));
-            }
         @endphp
         <div class="product-card-footer">
             <div class="pc-price">
@@ -55,7 +52,7 @@
                     @if ($shortPrice)
                         <span class="price-cur">₹</span><span class="price-whole">{{ number_format($product->sale_price) }}</span>
                     @else
-                        <span class="price-cur">₹</span><span class="price-whole">{{ number_format((int) $priceWhole) }}</span><span class="price-frac">{{ $priceFrac }}</span>
+                        <span class="price-cur">₹</span><span class="price-whole">{{ number_format($product->sale_price, 2) }}</span>
                     @endif
                 </span>
                 @if ($product->discountPercentage() > 0)

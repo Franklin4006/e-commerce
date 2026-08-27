@@ -1,5 +1,4 @@
 @php
-    [$priceWhole, $priceFrac] = explode('.', number_format($product->sale_price, 2, '.', ''));
     $ratingCount = $product->approved_reviews_count ?? $product->reviewsCount();
     $ratingAvg = $ratingCount > 0
         ? (float) ($product->approved_reviews_avg_rating ?? $product->averageRating())
@@ -30,7 +29,7 @@
 
         <div class="pc-price">
             <span class="price price-lg">
-                <span class="price-cur">₹</span><span class="price-whole">{{ number_format((int) $priceWhole) }}</span><span class="price-frac">{{ $priceFrac }}</span>
+                <span class="price-cur">₹</span><span class="price-whole">{{ number_format($product->sale_price, 2) }}</span>
             </span>
             @if ($product->discountPercentage() > 0)
                 <span class="price-off">{{ $product->discountPercentage() }}% off</span>

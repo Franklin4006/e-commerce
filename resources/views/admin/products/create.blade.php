@@ -24,6 +24,7 @@
     <script src="{{ asset('js/searchable-select.js') }}"></script>
     <script src="{{ asset('js/rich-text-editor.js') }}"></script>
     <script src="{{ asset('js/product-form.js') }}"></script>
+    <script src="{{ asset('js/product-slug-form.js') }}"></script>
     <script src="{{ asset('js/product-specs-form.js') }}"></script>
     <script src="{{ asset('js/product-colors-form.js') }}"></script>
 </x-layouts.admin>

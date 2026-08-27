@@ -2586,11 +2586,6 @@ td.text-right, th.text-right {
     letter-spacing: -0.02em;
 }
 
-.price-frac {
-    font-size: 0.78rem;
-    margin-top: 0.15em;
-}
-
 .price-list {
     font-size: 0.92rem;
     font-weight: 600;
@@ -2850,7 +2845,6 @@ td.text-right, th.text-right {
 .price-lg { line-height: 1.05; }
 .price-lg .price-cur { font-size: 1rem; margin-top: 0.15em; }
 .price-lg .price-whole { font-size: 2rem; }
-.price-lg .price-frac { font-size: 1rem; margin-top: 0.15em; }
 
 .pdp-price {
     display: flex;
