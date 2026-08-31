@@ -127,9 +127,9 @@
 
                     <div class="form-group">
                         <label class="form-label">Stock by Size</label>
-                        <div class="form-row">
+                        <div class="form-row size-stock-row">
                             @foreach ($sizeNames as $sizeOption)
-                                <div class="form-group">
+                                <div class="form-group size-stock-group">
                                     <label class="form-label">{{ $sizeOption }}</label>
                                     <input type="number" name="colors[{{ $i }}][sizes][{{ $sizeOption }}]" value="{{ $color['sizes'][$sizeOption] ?? 0 }}" min="0" class="form-control">
                                 </div>
@@ -176,9 +176,9 @@
 
                 <div class="form-group">
                     <label class="form-label">Stock by Size</label>
-                    <div class="form-row">
+                    <div class="form-row size-stock-row">
                         @foreach ($sizeNames as $sizeOption)
-                            <div class="form-group">
+                            <div class="form-group size-stock-group">
                                 <label class="form-label">{{ $sizeOption }}</label>
                                 <input type="number" name="colors[__INDEX__][sizes][{{ $sizeOption }}]" value="0" min="0" class="form-control">
                             </div>

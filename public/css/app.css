@@ -368,6 +368,19 @@ svg {
     flex: 1;
 }
 
+.size-stock-row {
+    flex-wrap: wrap;
+}
+
+.size-stock-row .form-group.size-stock-group {
+    flex: 0 0 auto;
+    min-width: 90px;
+}
+
+.size-stock-group .form-control {
+    width: 90px;
+}
+
 textarea.form-control {
     resize: vertical;
 }
