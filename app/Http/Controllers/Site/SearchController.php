@@ -21,6 +21,11 @@ class SearchController extends Controller
                     $q->where('name', 'like', '%'.$query.'%')
                         ->orWhere('description', 'like', '%'.$query.'%');
                 })
+                // Name matches rank above description-only matches, so a
+                // product whose name contains the search term always
+                // outranks one that only happens to mention it in passing.
+                ->selectRaw('products.*, case when name like ? then 0 else 1 end as name_match_rank', ['%'.$query.'%'])
+                ->orderBy('name_match_rank')
                 ->orderBy('priority')
                 ->latest()
                 ->paginate(12)
