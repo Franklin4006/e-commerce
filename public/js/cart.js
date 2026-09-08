@@ -161,13 +161,31 @@
             if (!sizeSelector) {
                 return;
             }
+            var anyAvailable = false;
             sizeSelector.querySelectorAll('.size-option').forEach(function (btn) {
                 var stock = sizes[btn.dataset.size] || 0;
-                btn.disabled = stock <= 0;
-                if (btn.disabled && btn.classList.contains('active')) {
+                var available = stock > 0;
+                btn.disabled = !available;
+                btn.style.display = available ? '' : 'none';
+                if (available) {
+                    anyAvailable = true;
+                } else if (btn.classList.contains('active')) {
                     btn.classList.remove('active');
                 }
             });
+
+            var optionsWrap = sizeSelector.querySelector('.size-selector-options');
+            var hint = sizeSelector.querySelector('.size-selector-hint');
+            var emptyMsg = sizeSelector.querySelector('[data-role="size-empty"]');
+            if (optionsWrap) {
+                optionsWrap.style.display = anyAvailable ? '' : 'none';
+            }
+            if (hint) {
+                hint.style.display = anyAvailable ? '' : 'none';
+            }
+            if (emptyMsg) {
+                emptyMsg.style.display = anyAvailable ? 'none' : '';
+            }
         }
 
         function maxStock() {

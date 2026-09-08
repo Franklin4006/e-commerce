@@ -26,6 +26,7 @@ class OrderController extends Controller
     public function index(Request $request): View
     {
         $orders = Order::with('user')
+            ->paymentConfirmed()
             ->when($request->filled('search'), fn ($query) => $query->where('order_number', 'like', '%'.$request->input('search').'%'))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
             ->latest()
@@ -33,6 +34,19 @@ class OrderController extends Controller
             ->withQueryString();
 
         return view('admin.orders.index', compact('orders'));
+    }
+
+    public function paymentIssues(Request $request): View
+    {
+        $orders = Order::with('user')
+            ->whereIn('payment_status', ['pending', 'failed'])
+            ->when($request->filled('search'), fn ($query) => $query->where('order_number', 'like', '%'.$request->input('search').'%'))
+            ->when($request->filled('payment_status'), fn ($query) => $query->where('payment_status', $request->input('payment_status')))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.orders.payment-issues', compact('orders'));
     }
 
     public function show(Order $order): View
@@ -129,15 +143,15 @@ class OrderController extends Controller
 
     public function updatePaymentStatus(Request $request, Order $order): RedirectResponse
     {
-        if ($order->payment_method !== 'cod') {
-            abort(403, 'Payment status can only be changed manually for COD orders.');
-        }
-
         $validated = $request->validate([
             'payment_status' => ['required', Rule::in(Order::PAYMENT_STATUSES)],
+            'transaction_reference' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $order->update(['payment_status' => $validated['payment_status']]);
+        $order->update([
+            'payment_status' => $validated['payment_status'],
+            'transaction_reference' => $validated['transaction_reference'] ?? $order->transaction_reference,
+        ]);
 
         return back()->with('status', 'Payment status updated successfully.');
     }

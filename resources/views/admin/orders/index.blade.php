@@ -65,11 +65,7 @@
                             <td>{{ $order->created_at->format('d M Y') }}</td>
                             <td>
                                 {{ strtoupper($order->payment_method) }}
-                                @if ($order->payment_status === 'paid')
-                                    <span class="badge badge-success">Paid</span>
-                                @else
-                                    <span class="badge badge-muted">{{ ucfirst($order->payment_status) }}</span>
-                                @endif
+                                <span class="badge {{ \App\Models\Order::badgeClassForPaymentStatus($order->payment_status) }}">{{ ucfirst($order->payment_status) }}</span>
                             </td>
                             <td><span class="badge {{ \App\Models\Order::badgeClassForStatus($order->status) }}">{{ ucfirst($order->status) }}</span></td>
                             <td>₹{{ number_format($order->grand_total, 2) }}</td>

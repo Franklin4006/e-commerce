@@ -44,7 +44,14 @@
             </div>
         </div>
         <div class="info-box">
-            <span class="info-box-icon {{ $order->payment_status === 'paid' ? 'bg-success' : 'bg-warning' }}">
+            @php
+                $paymentColor = match ($order->payment_status) {
+                    'paid' => 'bg-success',
+                    'failed' => 'bg-danger',
+                    default => 'bg-warning',
+                };
+            @endphp
+            <span class="info-box-icon {{ $paymentColor }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             </span>
             <div class="info-box-content">
@@ -134,30 +141,37 @@
     <section class="card">
         <h2 class="section-title">Payment</h2>
         <p>Method: {{ strtoupper($order->payment_method) }}</p>
-        <p>Status: <span class="badge {{ $order->payment_status === 'paid' ? 'badge-success' : 'badge-muted' }}">{{ ucfirst($order->payment_status) }}</span></p>
+        <p>Status: <span class="badge {{ \App\Models\Order::badgeClassForPaymentStatus($order->payment_status) }}">{{ ucfirst($order->payment_status) }}</span></p>
         @if ($order->razorpay_payment_id)
             <p>Razorpay Payment ID: {{ $order->razorpay_payment_id }}</p>
         @endif
+        @if ($order->transaction_reference)
+            <p>Transaction Reference: {{ $order->transaction_reference }}</p>
+        @endif
 
         @can('content-write')
-            @if ($order->payment_method === 'cod')
-                <form method="POST" action="{{ route('admin.orders.payment-status.update', $order) }}" class="no-print" style="margin-top: 1rem;">
-                    @csrf
-                    @method('PUT')
+            <form method="POST" action="{{ route('admin.orders.payment-status.update', $order) }}" class="no-print" style="margin-top: 1rem;">
+                @csrf
+                @method('PUT')
 
-                    <div class="form-group">
-                        <label for="payment_status" class="form-label">Update Payment Status</label>
-                        <select id="payment_status" name="payment_status" class="form-control">
-                            @foreach (\App\Models\Order::PAYMENT_STATUSES as $paymentStatus)
-                                <option value="{{ $paymentStatus }}" @selected(old('payment_status', $order->payment_status) === $paymentStatus)>{{ ucfirst($paymentStatus) }}</option>
-                            @endforeach
-                        </select>
-                        <small style="color: var(--text-muted);">Cash on Delivery orders aren't marked paid automatically &mdash; update this once the payment is collected.</small>
-                    </div>
+                <div class="form-group">
+                    <label for="payment_status" class="form-label">Update Payment Status</label>
+                    <select id="payment_status" name="payment_status" class="form-control">
+                        @foreach (\App\Models\Order::PAYMENT_STATUSES as $paymentStatus)
+                            <option value="{{ $paymentStatus }}" @selected(old('payment_status', $order->payment_status) === $paymentStatus)>{{ ucfirst($paymentStatus) }}</option>
+                        @endforeach
+                    </select>
+                    <small style="color: var(--text-muted);">Cash on Delivery orders aren't marked paid automatically, and online payments that failed verification can be corrected here once you've confirmed the payment (e.g. via the Razorpay dashboard).</small>
+                </div>
 
-                    <button type="submit" class="btn btn-secondary">Update Payment Status</button>
-                </form>
-            @endif
+                <div class="form-group">
+                    <label for="transaction_reference" class="form-label">Transaction Reference (optional)</label>
+                    <input type="text" id="transaction_reference" name="transaction_reference" class="form-control" value="{{ old('transaction_reference', $order->transaction_reference) }}" maxlength="255" placeholder="e.g. UTR, bank ref, or Razorpay payment ID">
+                    @error('transaction_reference') <span class="field-error">{{ $message }}</span> @enderror
+                </div>
+
+                <button type="submit" class="btn btn-secondary">Update Payment Status</button>
+            </form>
         @endcan
     </section>
 

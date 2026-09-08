@@ -57,7 +57,8 @@ class AppServiceProvider extends ServiceProvider
         View::composer('components.layouts.admin', function ($view) {
             $lowStockThreshold = (int) Setting::get('low_stock_threshold', 5);
 
-            $view->with('pendingOrdersCount', Order::where('status', 'pending')->count());
+            $view->with('pendingOrdersCount', Order::where('status', 'pending')->paymentConfirmed()->count());
+            $view->with('paymentIssuesCount', Order::whereIn('payment_status', ['pending', 'failed'])->count());
             $view->with('pendingReviewsCount', Review::where('status', 'pending')->count());
             $view->with('lowStockCount', Product::where('stock', '<=', $lowStockThreshold)->count());
         });

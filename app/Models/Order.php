@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,7 +12,7 @@ class Order extends Model
 {
     public const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
-    public const PAYMENT_STATUSES = ['pending', 'paid'];
+    public const PAYMENT_STATUSES = ['pending', 'paid', 'failed'];
 
     protected $fillable = [
         'user_id',
@@ -21,6 +22,7 @@ class Order extends Model
         'payment_status',
         'razorpay_order_id',
         'razorpay_payment_id',
+        'transaction_reference',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -95,6 +97,18 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class)->latest();
     }
 
+    /**
+     * Orders that count as an actual, confirmed sale: paid, or COD (which is
+     * always a firm order even before cash is collected). Excludes online
+     * payments still pending or failed, which only exist as an initiation
+     * record until they're confirmed — those live on the Payment Issues page
+     * instead of the main order list, revenue totals, and order counts.
+     */
+    public function scopePaymentConfirmed(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q->where('payment_status', 'paid')->orWhere('payment_method', 'cod'));
+    }
+
     public static function badgeClassForStatus(string $status): string
     {
         return match ($status) {
@@ -102,6 +116,15 @@ class Order extends Model
             'processing', 'shipped' => 'badge-info',
             'cancelled' => 'badge-danger',
             default => 'badge-muted',
+        };
+    }
+
+    public static function badgeClassForPaymentStatus(string $paymentStatus): string
+    {
+        return match ($paymentStatus) {
+            'paid' => 'badge-success',
+            'failed' => 'badge-danger',
+            default => 'badge-warning',
         };
     }
 }

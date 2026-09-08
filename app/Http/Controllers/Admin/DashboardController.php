@@ -31,16 +31,17 @@ class DashboardController extends Controller
 
         $revenueTotal = (float) Order::whereBetween('created_at', [$start, $end])
             ->where('status', '!=', 'cancelled')
+            ->paymentConfirmed()
             ->sum('grand_total');
 
-        $orderCount = Order::whereBetween('created_at', [$start, $end])->count();
+        $orderCount = Order::whereBetween('created_at', [$start, $end])->paymentConfirmed()->count();
 
         $customerCount = User::where('is_admin', false)->count();
         $activeProductCount = Product::where('status', true)->count();
 
         $chartData = $this->revenueChartData($start, $end);
 
-        $recentOrders = Order::latest()->take(8)->get();
+        $recentOrders = Order::paymentConfirmed()->latest()->take(8)->get();
 
         $lowStockThreshold = (int) Setting::get('low_stock_threshold', 5);
         $lowStockProducts = Product::where('stock', '<=', $lowStockThreshold)
@@ -124,6 +125,7 @@ class DashboardController extends Controller
     {
         $orders = Order::whereBetween('created_at', [$start, $end])
             ->where('status', '!=', 'cancelled')
+            ->paymentConfirmed()
             ->get(['created_at', 'grand_total']);
 
         $totalDays = (int) $start->copy()->startOfDay()->diffInDays($end->copy()->startOfDay()) + 1;

@@ -173,12 +173,23 @@ class CheckoutController extends Controller
             'receipt' => 'rcpt_'.Str::random(12),
         ]);
 
+        // Record the order the moment payment is initiated (not just once it
+        // succeeds), so an abandoned or failed payment still leaves a paper
+        // trail visible on the admin Payment Issues page instead of vanishing.
+        $order = OrderCreator::createPendingOnlinePayment(
+            $user,
+            $itemsData,
+            $shippingAddress,
+            $billingAddress,
+            $totals,
+            'razorpay',
+            ['razorpay_order_id' => $razorpayOrder->id]
+        );
+
         $request->session()->put('razorpay_checkout', [
+            'order_id' => $order->id,
             'razorpay_order_id' => $razorpayOrder->id,
-            'shipping_address_id' => $shippingAddress->id,
-            'billing_address_id' => $billingAddress->id,
             'items' => $itemsData,
-            'totals' => $totals,
             'coupon_id' => $coupon?->id,
             'buy_now' => $request->session()->has('buy_now'),
         ]);
@@ -209,6 +220,10 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.create')->withErrors(['payment' => 'Your checkout session has expired. Please try again.']);
         }
 
+        $order = Order::where('id', $pending['order_id'])->where('user_id', $user->id)->first();
+
+        abort_if(! $order, 404);
+
         try {
             Razorpay::client()->utility->verifyPaymentSignature([
                 'razorpay_order_id' => $validated['razorpay_order_id'],
@@ -216,32 +231,28 @@ class CheckoutController extends Controller
                 'razorpay_signature' => $validated['razorpay_signature'],
             ]);
         } catch (SignatureVerificationError $e) {
+            OrderCreator::failOnlinePayment($order, ['razorpay_payment_id' => $validated['razorpay_payment_id']]);
+
+            $request->session()->forget('razorpay_checkout');
+
             return redirect()->route('checkout.create')->withErrors(['payment' => 'Payment verification failed. Please try again.']);
         }
 
-        $shippingAddress = $user->addresses()->find($pending['shipping_address_id']);
-        $billingAddress = $user->addresses()->find($pending['billing_address_id']);
-
-        abort_if(! $shippingAddress || ! $billingAddress, 404);
-
         try {
-            $order = OrderCreator::create(
-                $user,
-                $pending['items'],
-                $shippingAddress,
-                $billingAddress,
-                $pending['totals'],
-                'razorpay',
-                'paid',
-                [
-                    'razorpay_order_id' => $validated['razorpay_order_id'],
-                    'razorpay_payment_id' => $validated['razorpay_payment_id'],
-                ]
-            );
+            OrderCreator::confirmOnlinePayment($order, $pending['items'], ['razorpay_payment_id' => $validated['razorpay_payment_id']]);
         } catch (RuntimeException $e) {
-            // Payment has already been captured by Razorpay at this point. Fulfilment
-            // failing on stock is rare (cart was priced/locked at initiate time) but if
-            // it happens this needs a manual refund via the Razorpay dashboard for now.
+            // Payment has already been captured by Razorpay at this point. Stock running
+            // out between initiating payment and confirming it is rare, but if it happens
+            // the money still moved, so mark it paid and flag it for a manual refund or
+            // restock decision instead of leaving the order stuck pending forever.
+            $order->update(['payment_status' => 'paid', 'razorpay_payment_id' => $validated['razorpay_payment_id']]);
+            $order->statusHistories()->create([
+                'status' => $order->status,
+                'note' => 'Payment captured but stock unavailable: '.$e->getMessage().' Needs manual refund or restock.',
+            ]);
+
+            $request->session()->forget('razorpay_checkout');
+
             return redirect()->route('checkout.create')->withErrors(['cart' => $e->getMessage()]);
         }
 

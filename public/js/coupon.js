@@ -14,7 +14,7 @@
             body: body ? JSON.stringify(body) : undefined,
         }).then(function (res) {
             return res.json().then(function (data) {
-                return { ok: res.ok, body: data };
+                return { ok: res.ok, status: res.status, body: data };
             });
         });
     }
@@ -45,7 +45,9 @@
                 }
 
                 if (errorEl) {
-                    errorEl.textContent = result.body.message || 'Unable to apply this coupon.';
+                    errorEl.textContent = result.status === 401
+                        ? 'Please login to apply a coupon.'
+                        : (result.body.message || 'Unable to apply this coupon.');
                     errorEl.style.display = 'block';
                 }
 
