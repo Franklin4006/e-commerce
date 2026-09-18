@@ -26,22 +26,31 @@ class DashboardController extends Controller
     public function index(Request $request): View
     {
         $period = array_key_exists($request->input('period'), self::PERIODS) ? $request->input('period') : 'this_month';
+        $paymentMethod = in_array($request->input('payment_method'), Order::PAYMENT_METHODS, true) ? $request->input('payment_method') : null;
 
         [$start, $end] = $this->resolvePeriod($period, $request->input('from'), $request->input('to'));
 
         $revenueTotal = (float) Order::whereBetween('created_at', [$start, $end])
             ->where('status', '!=', 'cancelled')
             ->paymentConfirmed()
+            ->when($paymentMethod, fn ($query) => $query->where('payment_method', $paymentMethod))
             ->sum('grand_total');
 
-        $orderCount = Order::whereBetween('created_at', [$start, $end])->paymentConfirmed()->count();
+        $orderCount = Order::whereBetween('created_at', [$start, $end])
+            ->paymentConfirmed()
+            ->when($paymentMethod, fn ($query) => $query->where('payment_method', $paymentMethod))
+            ->count();
 
         $customerCount = User::where('is_admin', false)->count();
         $activeProductCount = Product::where('status', true)->count();
 
-        $chartData = $this->revenueChartData($start, $end);
+        $chartData = $this->revenueChartData($start, $end, $paymentMethod);
 
-        $recentOrders = Order::paymentConfirmed()->latest()->take(8)->get();
+        $recentOrders = Order::paymentConfirmed()
+            ->when($paymentMethod, fn ($query) => $query->where('payment_method', $paymentMethod))
+            ->latest()
+            ->take(8)
+            ->get();
 
         $lowStockThreshold = (int) Setting::get('low_stock_threshold', 5);
         $lowStockProducts = Product::where('stock', '<=', $lowStockThreshold)
@@ -61,6 +70,7 @@ class DashboardController extends Controller
             'period' => $period,
             'periodLabel' => self::PERIODS[$period],
             'rangeLabel' => $start->format('d M Y').' – '.$end->format('d M Y'),
+            'paymentMethod' => $paymentMethod,
         ]);
     }
 
@@ -121,11 +131,12 @@ class DashboardController extends Controller
     /**
      * @return array<int, array{label: string, total: float}>
      */
-    private function revenueChartData(Carbon $start, Carbon $end): array
+    private function revenueChartData(Carbon $start, Carbon $end, ?string $paymentMethod): array
     {
         $orders = Order::whereBetween('created_at', [$start, $end])
             ->where('status', '!=', 'cancelled')
             ->paymentConfirmed()
+            ->when($paymentMethod, fn ($query) => $query->where('payment_method', $paymentMethod))
             ->get(['created_at', 'grand_total']);
 
         $totalDays = (int) $start->copy()->startOfDay()->diffInDays($end->copy()->startOfDay()) + 1;

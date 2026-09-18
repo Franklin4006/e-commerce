@@ -18,8 +18,15 @@
                     <input type="date" name="to" value="{{ request('to') }}" class="form-control" placeholder="To">
                 </div>
 
+                <select name="payment_method" class="form-control">
+                    <option value="">All Payment Types</option>
+                    @foreach (\App\Models\Order::PAYMENT_METHODS as $method)
+                        <option value="{{ $method }}" @selected($paymentMethod === $method)>{{ $method === 'cod' ? 'Cash on Delivery' : ucfirst($method) }}</option>
+                    @endforeach
+                </select>
+
                 <button type="submit" class="btn btn-primary">Filter</button>
-                @if ($period !== 'this_month')
+                @if ($period !== 'this_month' || $paymentMethod)
                     <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">Reset</a>
                 @endif
 

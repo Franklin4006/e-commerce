@@ -29,6 +29,7 @@ class OrderController extends Controller
             ->paymentConfirmed()
             ->when($request->filled('search'), fn ($query) => $query->where('order_number', 'like', '%'.$request->input('search').'%'))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
+            ->when($request->filled('payment_method'), fn ($query) => $query->where('payment_method', $request->input('payment_method')))
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -40,6 +41,7 @@ class OrderController extends Controller
     {
         $orders = Order::with('user')
             ->whereIn('payment_status', ['pending', 'failed'])
+            ->where('payment_method', '!=', 'cod')
             ->when($request->filled('search'), fn ($query) => $query->where('order_number', 'like', '%'.$request->input('search').'%'))
             ->when($request->filled('payment_status'), fn ($query) => $query->where('payment_status', $request->input('payment_status')))
             ->latest()
@@ -52,6 +54,10 @@ class OrderController extends Controller
     public function show(Order $order): View
     {
         $order->load('items', 'statusHistories.changedBy');
+
+        if (! $order->admin_viewed_at) {
+            $order->update(['admin_viewed_at' => now()]);
+        }
 
         return view('admin.orders.show', compact('order'));
     }
@@ -100,35 +106,10 @@ class OrderController extends Controller
     private function applyStatusTransition(Order $order, string $status, ?string $note, int $changedByUserId): void
     {
         DB::transaction(function () use ($order, $status, $note, $changedByUserId) {
-            if ($status === 'cancelled' && $order->status !== 'cancelled') {
-                foreach ($order->items as $item) {
-                    if (! $item->product_id || ! $item->size) {
-                        continue;
-                    }
-
-                    $sizeRow = ProductSize::where('product_id', $item->product_id)
-                        ->where('product_color_id', $item->product_color_id)
-                        ->where('size', $item->size)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if (! $sizeRow) {
-                        continue;
-                    }
-
-                    $sizeRow->increment('stock', $item->quantity);
-
-                    StockMovement::create([
-                        'product_id' => $item->product_id,
-                        'size' => $item->size,
-                        'product_color_id' => $item->product_color_id,
-                        'order_id' => $order->id,
-                        'changed_by' => $changedByUserId,
-                        'quantity_change' => $item->quantity,
-                        'stock_after' => $sizeRow->stock,
-                        'reason' => 'Order cancelled',
-                    ]);
-                }
+            // Skip if payment already failed: that already released the stock,
+            // so restoring it again here would double-count it.
+            if ($status === 'cancelled' && $order->status !== 'cancelled' && $order->payment_status !== 'failed') {
+                $this->adjustStockForOrder($order, $changedByUserId, 'Order cancelled', restore: true);
             }
 
             $order->update(['status' => $status]);
@@ -148,12 +129,82 @@ class OrderController extends Controller
             'transaction_reference' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $order->update([
-            'payment_status' => $validated['payment_status'],
-            'transaction_reference' => $validated['transaction_reference'] ?? $order->transaction_reference,
-        ]);
+        try {
+            DB::transaction(function () use ($order, $validated, $request) {
+                $previousStatus = $order->payment_status;
+                $newStatus = $validated['payment_status'];
+
+                // Stock is reserved for every order up front (COD at creation,
+                // online payments the moment they're initiated). Marking a
+                // payment "failed" means that sale isn't happening, so release
+                // the reservation back; flipping it away from "failed" means
+                // it's back on, so reserve it again. Skip entirely if the order
+                // is already cancelled, since cancellation already settled stock.
+                if ($order->status !== 'cancelled' && $newStatus !== $previousStatus) {
+                    if ($newStatus === 'failed') {
+                        $this->adjustStockForOrder($order, $request->user()->id, 'Payment marked as failed', restore: true);
+                    } elseif ($previousStatus === 'failed') {
+                        $this->adjustStockForOrder($order, $request->user()->id, 'Payment marked as '.$newStatus, restore: false);
+                    }
+                }
+
+                $order->update([
+                    'payment_status' => $newStatus,
+                    'transaction_reference' => $validated['transaction_reference'] ?? $order->transaction_reference,
+                ]);
+            });
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['payment_status' => $e->getMessage()]);
+        }
 
         return back()->with('status', 'Payment status updated successfully.');
+    }
+
+    /**
+     * Restore (release) or reserve (deduct) stock for every item on an order,
+     * logging a StockMovement for each. Used when cancelling an order and when
+     * an online payment's status flips to/from "failed".
+     */
+    private function adjustStockForOrder(Order $order, int $changedByUserId, string $reason, bool $restore): void
+    {
+        foreach ($order->items as $item) {
+            if (! $item->product_id || ! $item->size) {
+                continue;
+            }
+
+            $sizeRow = ProductSize::where('product_id', $item->product_id)
+                ->where('product_color_id', $item->product_color_id)
+                ->where('size', $item->size)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $sizeRow) {
+                continue;
+            }
+
+            if ($restore) {
+                $sizeRow->increment('stock', $item->quantity);
+                $quantityChange = $item->quantity;
+            } else {
+                if ($sizeRow->stock < $item->quantity) {
+                    throw new RuntimeException("Sorry, \"{$item->product_name}\" doesn't have enough stock available to reinstate this order.");
+                }
+
+                $sizeRow->decrement('stock', $item->quantity);
+                $quantityChange = -$item->quantity;
+            }
+
+            StockMovement::create([
+                'product_id' => $item->product_id,
+                'size' => $item->size,
+                'product_color_id' => $item->product_color_id,
+                'order_id' => $order->id,
+                'changed_by' => $changedByUserId,
+                'quantity_change' => $quantityChange,
+                'stock_after' => $sizeRow->stock,
+                'reason' => $reason,
+            ]);
+        }
     }
 
     public function invoice(Order $order): Response

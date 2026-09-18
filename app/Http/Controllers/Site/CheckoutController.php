@@ -143,9 +143,27 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->withErrors(['cart' => 'Your cart is empty.']);
         }
 
+        // Re-validate everything right before the order is actually placed: stock
+        // and the coupon can both have changed since the checkout page was loaded
+        // (another shopper bought the last unit, the coupon expired/hit its limit,
+        // etc.), so catch that here with a clear message instead of letting it
+        // surface as a confusing failure deeper in order/payment creation.
+        $appliedCouponCode = $request->session()->get('applied_coupon');
         $coupon = Coupon::resolveApplied($request, (float) $items->sum('subtotal'));
-        $totals = OrderTotals::forCart($shippingAddress, $coupon, $items);
+
+        if ($appliedCouponCode && ! $coupon) {
+            return back()->withErrors(['coupon' => 'Your coupon is no longer valid and has been removed. Please review your order and try again.']);
+        }
+
         $itemsData = OrderCreator::snapshotItems($items);
+
+        try {
+            OrderCreator::assertStockAvailable($itemsData);
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['cart' => $e->getMessage()]);
+        }
+
+        $totals = OrderTotals::forCart($shippingAddress, $coupon, $items);
 
         if ($validated['payment_method'] === 'cod') {
             try {
@@ -176,15 +194,21 @@ class CheckoutController extends Controller
         // Record the order the moment payment is initiated (not just once it
         // succeeds), so an abandoned or failed payment still leaves a paper
         // trail visible on the admin Payment Issues page instead of vanishing.
-        $order = OrderCreator::createPendingOnlinePayment(
-            $user,
-            $itemsData,
-            $shippingAddress,
-            $billingAddress,
-            $totals,
-            'razorpay',
-            ['razorpay_order_id' => $razorpayOrder->id]
-        );
+        // Stock is reserved right away too, so it can't be oversold while the
+        // shopper is on the Razorpay payment screen.
+        try {
+            $order = OrderCreator::createPendingOnlinePayment(
+                $user,
+                $itemsData,
+                $shippingAddress,
+                $billingAddress,
+                $totals,
+                'razorpay',
+                ['razorpay_order_id' => $razorpayOrder->id]
+            );
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['cart' => $e->getMessage()]);
+        }
 
         $request->session()->put('razorpay_checkout', [
             'order_id' => $order->id,
@@ -231,30 +255,16 @@ class CheckoutController extends Controller
                 'razorpay_signature' => $validated['razorpay_signature'],
             ]);
         } catch (SignatureVerificationError $e) {
-            OrderCreator::failOnlinePayment($order, ['razorpay_payment_id' => $validated['razorpay_payment_id']]);
+            OrderCreator::failOnlinePayment($order, $pending['items'], ['razorpay_payment_id' => $validated['razorpay_payment_id']]);
 
             $request->session()->forget('razorpay_checkout');
 
             return redirect()->route('checkout.create')->withErrors(['payment' => 'Payment verification failed. Please try again.']);
         }
 
-        try {
-            OrderCreator::confirmOnlinePayment($order, $pending['items'], ['razorpay_payment_id' => $validated['razorpay_payment_id']]);
-        } catch (RuntimeException $e) {
-            // Payment has already been captured by Razorpay at this point. Stock running
-            // out between initiating payment and confirming it is rare, but if it happens
-            // the money still moved, so mark it paid and flag it for a manual refund or
-            // restock decision instead of leaving the order stuck pending forever.
-            $order->update(['payment_status' => 'paid', 'razorpay_payment_id' => $validated['razorpay_payment_id']]);
-            $order->statusHistories()->create([
-                'status' => $order->status,
-                'note' => 'Payment captured but stock unavailable: '.$e->getMessage().' Needs manual refund or restock.',
-            ]);
-
-            $request->session()->forget('razorpay_checkout');
-
-            return redirect()->route('checkout.create')->withErrors(['cart' => $e->getMessage()]);
-        }
+        // Stock was already reserved when the payment was initiated, so this
+        // just marks the order paid.
+        OrderCreator::confirmOnlinePayment($order, ['razorpay_payment_id' => $validated['razorpay_payment_id']]);
 
         if ($pending['coupon_id'] ?? null) {
             $coupon = Coupon::find($pending['coupon_id']);

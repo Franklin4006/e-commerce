@@ -14,6 +14,8 @@ class Order extends Model
 
     public const PAYMENT_STATUSES = ['pending', 'paid', 'failed'];
 
+    public const PAYMENT_METHODS = ['cod', 'razorpay', 'manual'];
+
     protected $fillable = [
         'user_id',
         'order_number',
@@ -23,6 +25,7 @@ class Order extends Model
         'razorpay_order_id',
         'razorpay_payment_id',
         'transaction_reference',
+        'admin_viewed_at',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -60,6 +63,7 @@ class Order extends Model
             'shipping_charge' => 'decimal:2',
             'coupon_discount' => 'decimal:2',
             'grand_total' => 'decimal:2',
+            'admin_viewed_at' => 'datetime',
         ];
     }
 

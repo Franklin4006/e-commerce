@@ -18,6 +18,13 @@
                     @endforeach
                 </select>
 
+                <select name="payment_method" class="form-control">
+                    <option value="">All Payment Types</option>
+                    @foreach (\App\Models\Order::PAYMENT_METHODS as $method)
+                        <option value="{{ $method }}" @selected(request('payment_method') === $method)>{{ $method === 'cod' ? 'Cash on Delivery' : ucfirst($method) }}</option>
+                    @endforeach
+                </select>
+
                 <button type="submit" class="btn btn-primary">Filter</button>
                 <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Reset</a>
             </form>

@@ -17,6 +17,35 @@ use RuntimeException;
 class OrderCreator
 {
     /**
+     * Quick, unlocked stock check used to fail fast before doing anything
+     * expensive or external (e.g. calling the Razorpay API). This is not a
+     * substitute for the row-locked check inside create()/
+     * createPendingOnlinePayment() — stock can still change between this call
+     * and the actual reservation, which is why those methods re-check under
+     * lockForUpdate() before decrementing.
+     *
+     * @param  array<int, array{product_id: int, product_name: string, size: string, color_id: ?int, color_name: ?string, quantity: int}>  $itemsData
+     *
+     * @throws RuntimeException if any item doesn't have enough stock.
+     */
+    public static function assertStockAvailable(array $itemsData): void
+    {
+        foreach ($itemsData as $item) {
+            $sizeRow = ProductSize::where('product_id', $item['product_id'])
+                ->where('product_color_id', $item['color_id'] ?? null)
+                ->where('size', $item['size'])
+                ->first();
+
+            if (! $sizeRow || $sizeRow->stock < $item['quantity']) {
+                $variantLabel = $item['color_name'] ?? null;
+                $variantLabel = $variantLabel ? "{$variantLabel}, size {$item['size']}" : "size {$item['size']}";
+
+                throw new RuntimeException("Sorry, \"{$item['product_name']}\" ({$variantLabel}) doesn't have enough stock available.");
+            }
+        }
+    }
+
+    /**
      * @param  array<int, array{product_id: int, product_name: string, size: string, color_id: ?int, color_name: ?string, quantity: int, mrp: float, sale_price: float, subtotal: float}>  $itemsData
      * @param  array{totalMrp: float, total: float, savings: float, shippingCharge: ?float, couponCode?: ?string, couponDiscount?: float, grandTotal: float}  $totals
      * @param  array<string, mixed>  $extra
@@ -125,15 +154,17 @@ class OrderCreator
 
     /**
      * Record an order the moment an online payment is initiated (the Razorpay
-     * order has been created, but the shopper hasn't paid yet). Unlike
-     * create(), this does not touch stock: nothing is sold until the payment
-     * is actually confirmed, so stock stays available to other shoppers in
-     * the meantime. The order sits as payment_status "pending" until
-     * confirmOnlinePayment() or failOnlinePayment() resolves it.
+     * order has been created, but the shopper hasn't paid yet). Stock is
+     * reserved right away, just like create(), so it can't be oversold to
+     * another shopper while this payment is in flight. If the payment never
+     * completes, confirmOnlinePayment() marks it paid (no further stock
+     * change needed) or failOnlinePayment() releases the reservation back.
      *
      * @param  array<int, array{product_id: int, product_name: string, size: string, color_id: ?int, color_name: ?string, quantity: int, mrp: float, sale_price: float, subtotal: float}>  $itemsData
      * @param  array{totalMrp: float, total: float, savings: float, shippingCharge: ?float, couponCode?: ?string, couponDiscount?: float, grandTotal: float}  $totals
      * @param  array<string, mixed>  $extra
+     *
+     * @throws RuntimeException if there isn't enough stock to reserve.
      */
     public static function createPendingOnlinePayment(
         User $user,
@@ -145,6 +176,26 @@ class OrderCreator
         array $extra = []
     ): Order {
         return DB::transaction(function () use ($user, $itemsData, $shippingAddress, $billingAddress, $totals, $paymentMethod, $extra) {
+            $sizeRowsByKey = [];
+
+            foreach ($itemsData as $item) {
+                $key = $item['product_id'].':'.($item['color_id'] ?? 'none').':'.$item['size'];
+                $sizeRow = ProductSize::where('product_id', $item['product_id'])
+                    ->where('product_color_id', $item['color_id'] ?? null)
+                    ->where('size', $item['size'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $sizeRow || $sizeRow->stock < $item['quantity']) {
+                    $variantLabel = $item['color_name'] ?? null;
+                    $variantLabel = $variantLabel ? "{$variantLabel}, size {$item['size']}" : "size {$item['size']}";
+
+                    throw new RuntimeException("Sorry, \"{$item['product_name']}\" ({$variantLabel}) doesn't have enough stock available.");
+                }
+
+                $sizeRowsByKey[$key] = $sizeRow;
+            }
+
             $order = Order::create(array_merge([
                 'user_id' => $user->id,
                 'order_number' => Order::generateOrderNumber(),
@@ -196,39 +247,9 @@ class OrderCreator
                     'sale_price' => $item['sale_price'],
                     'subtotal' => $item['subtotal'],
                 ]);
-            }
 
-            return $order;
-        });
-    }
-
-    /**
-     * Confirm a pending online-payment order once Razorpay verification
-     * succeeds: reserves stock now (this is the first point the sale is
-     * certain) and marks the order paid.
-     *
-     * @param  array<int, array{product_id: int, product_name: string, size: string, color_id: ?int, color_name: ?string, quantity: int, mrp: float, sale_price: float, subtotal: float}>  $itemsData
-     * @param  array<string, mixed>  $extra
-     *
-     * @throws RuntimeException if stock ran out between initiation and confirmation.
-     */
-    public static function confirmOnlinePayment(Order $order, array $itemsData, array $extra = []): Order
-    {
-        return DB::transaction(function () use ($order, $itemsData, $extra) {
-            foreach ($itemsData as $item) {
-                $sizeRow = ProductSize::where('product_id', $item['product_id'])
-                    ->where('product_color_id', $item['color_id'] ?? null)
-                    ->where('size', $item['size'])
-                    ->lockForUpdate()
-                    ->first();
-
-                if (! $sizeRow || $sizeRow->stock < $item['quantity']) {
-                    $variantLabel = $item['color_name'] ?? null;
-                    $variantLabel = $variantLabel ? "{$variantLabel}, size {$item['size']}" : "size {$item['size']}";
-
-                    throw new RuntimeException("Sorry, \"{$item['product_name']}\" ({$variantLabel}) doesn't have enough stock available.");
-                }
-
+                $key = $item['product_id'].':'.($item['color_id'] ?? 'none').':'.$item['size'];
+                $sizeRow = $sizeRowsByKey[$key];
                 $sizeRow->decrement('stock', $item['quantity']);
 
                 StockMovement::create([
@@ -238,33 +259,73 @@ class OrderCreator
                     'order_id' => $order->id,
                     'quantity_change' => -$item['quantity'],
                     'stock_after' => $sizeRow->stock,
-                    'reason' => 'Order placed',
+                    'reason' => 'Payment initiated',
                 ]);
             }
-
-            $order->update(array_merge(['payment_status' => 'paid'], $extra));
 
             return $order;
         });
     }
 
     /**
-     * Mark a pending online-payment order as failed (e.g. Razorpay signature
-     * verification failed). No stock was ever reserved for it, so there's
-     * nothing to release.
+     * Confirm a pending online-payment order once Razorpay verification
+     * succeeds. Stock was already reserved when the payment was initiated
+     * (see createPendingOnlinePayment()), so this only needs to mark the
+     * order paid.
      *
      * @param  array<string, mixed>  $extra
      */
-    public static function failOnlinePayment(Order $order, array $extra = []): Order
+    public static function confirmOnlinePayment(Order $order, array $extra = []): Order
     {
-        $order->update(array_merge(['payment_status' => 'failed'], $extra));
-
-        $order->statusHistories()->create([
-            'status' => $order->status,
-            'note' => 'Payment verification failed.',
-        ]);
+        $order->update(array_merge(['payment_status' => 'paid'], $extra));
 
         return $order;
+    }
+
+    /**
+     * Mark a pending online-payment order as failed (e.g. Razorpay signature
+     * verification failed). Stock was reserved when the payment was
+     * initiated, so release it back now that the sale isn't happening.
+     *
+     * @param  array<int, array{product_id: int, product_name: string, size: string, color_id: ?int, color_name: ?string, quantity: int}>  $itemsData
+     * @param  array<string, mixed>  $extra
+     */
+    public static function failOnlinePayment(Order $order, array $itemsData, array $extra = []): Order
+    {
+        return DB::transaction(function () use ($order, $itemsData, $extra) {
+            foreach ($itemsData as $item) {
+                $sizeRow = ProductSize::where('product_id', $item['product_id'])
+                    ->where('product_color_id', $item['color_id'] ?? null)
+                    ->where('size', $item['size'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $sizeRow) {
+                    continue;
+                }
+
+                $sizeRow->increment('stock', $item['quantity']);
+
+                StockMovement::create([
+                    'product_id' => $item['product_id'],
+                    'size' => $item['size'],
+                    'product_color_id' => $item['color_id'] ?? null,
+                    'order_id' => $order->id,
+                    'quantity_change' => $item['quantity'],
+                    'stock_after' => $sizeRow->stock,
+                    'reason' => 'Payment failed',
+                ]);
+            }
+
+            $order->update(array_merge(['payment_status' => 'failed'], $extra));
+
+            $order->statusHistories()->create([
+                'status' => $order->status,
+                'note' => 'Payment verification failed.',
+            ]);
+
+            return $order;
+        });
     }
 
     /**
